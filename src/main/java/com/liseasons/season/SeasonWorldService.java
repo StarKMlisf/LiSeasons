@@ -16,6 +16,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Biome;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Levelled;
+import org.bukkit.block.data.Snowable;
 import org.bukkit.entity.Player;
 
 public final class SeasonWorldService {
@@ -68,7 +69,7 @@ public final class SeasonWorldService {
             }
         }
         if (queued > 0) {
-            this.plugin.getLogger().info("春季融雪任务已加入队列，待处理区块 " + queued + " 个。");
+            this.plugin.getLogger().info("非冬季融雪任务已加入队列，待处理区块 " + queued + " 个。");
         }
     }
 
@@ -77,10 +78,6 @@ public final class SeasonWorldService {
         if (state == null) {
             return;
         }
-        if (state.season() != Season.WINTER && state.season() != Season.SPRING) {
-            return;
-        }
-
         World world = player.getWorld();
         Location origin = player.getLocation();
         int radius = config.searchRadius();
@@ -98,9 +95,10 @@ public final class SeasonWorldService {
 
         if (state.season() == Season.WINTER) {
             tryFreeze(top, config);
+            tryPlaceSnow(world, x, z, config);
             return;
         }
-        tryMelt(top, config);
+        tryMeltNearSurface(world, x, z, config);
     }
 
     private void tryFreeze(Block top, SeasonWaterCycleConfig config) {
@@ -113,25 +111,68 @@ public final class SeasonWorldService {
         if (!(top.getBlockData() instanceof Levelled levelled) || levelled.getLevel() != 0) {
             return;
         }
-        if (!top.getRelative(org.bukkit.block.BlockFace.UP).getType().isAir()) {
+        if (!top.getRelative(BlockFace.UP).getType().isAir()) {
             return;
         }
-        top.setType(Material.ICE, false);
+        top.setType(Material.ICE, true);
     }
 
-    private void tryMelt(Block top, SeasonWaterCycleConfig config) {
+    private void tryPlaceSnow(World world, int x, int z, SeasonWaterCycleConfig config) {
+        if (ThreadLocalRandom.current().nextInt(100) >= config.winterFreezeChancePercent()) {
+            return;
+        }
+
+        int y = world.getHighestBlockYAt(x, z);
+        Block ground = world.getBlockAt(x, y, z);
+        Block place = ground.getRelative(BlockFace.UP);
+
+        if (!place.getType().isAir()) {
+            return;
+        }
+
+        Material groundType = ground.getType();
+        if (!groundType.isSolid()) {
+            return;
+        }
+        if (groundType == Material.WATER
+                || groundType == Material.LAVA
+                || groundType == Material.ICE
+                || groundType == Material.FROSTED_ICE
+                || groundType == Material.PACKED_ICE
+                || groundType == Material.BLUE_ICE) {
+            return;
+        }
+        if (groundType.name().endsWith("_LEAVES")) {
+            return;
+        }
+
+        place.setType(Material.SNOW, true);
+        if (ground.getBlockData() instanceof Snowable snowable) {
+            snowable.setSnowy(true);
+            ground.setBlockData(snowable, true);
+        }
+    }
+
+    private void tryMeltNearSurface(World world, int x, int z, SeasonWaterCycleConfig config) {
         if (ThreadLocalRandom.current().nextInt(100) >= config.springMeltChancePercent()) {
             return;
         }
-        if (!top.getRelative(org.bukkit.block.BlockFace.UP).getType().isAir()) {
-            return;
-        }
-        if (top.getType() == Material.ICE || top.getType() == Material.FROSTED_ICE) {
-            top.setType(Material.WATER, false);
-            return;
-        }
-        if (top.getType() == Material.SNOW || top.getType() == Material.SNOW_BLOCK) {
-            top.setType(Material.AIR, false);
+
+        int highestY = world.getHighestBlockYAt(x, z) + 3;
+        int maxY = Math.min(world.getMaxHeight() - 1, highestY);
+        int minY = Math.max(world.getMinHeight(), highestY - 8);
+
+        for (int y = maxY; y >= minY; y--) {
+            Block block = world.getBlockAt(x, y, z);
+            Material type = block.getType();
+            if (type == Material.SNOW
+                    || type == Material.SNOW_BLOCK
+                    || type == Material.POWDER_SNOW
+                    || type == Material.ICE
+                    || type == Material.FROSTED_ICE) {
+                meltBlock(block);
+                return;
+            }
         }
     }
 
@@ -193,12 +234,15 @@ public final class SeasonWorldService {
         while (spent < budget && !task.finished()) {
             int x = baseX + task.localX();
             int z = baseZ + task.localZ();
-            int highestY = world.getHighestBlockYAt(x, z) + 2;
-            for (int y = Math.min(world.getMaxHeight() - 1, highestY); y >= world.getMinHeight(); y--) {
-                Block block = world.getBlockAt(x, y, z);
+            int highestY = world.getHighestBlockYAt(x, z) + 3;
+            int maxY = Math.min(world.getMaxHeight() - 1, highestY);
+            int minY = Math.max(world.getMinHeight(), highestY - 8);
+
+            for (int y = maxY; y >= minY; y--) {
                 if (isExemptBiome(world.getBiome(x, y, z), config)) {
-                    continue;
+                    break;
                 }
+                Block block = world.getBlockAt(x, y, z);
                 meltBlock(block);
                 spent++;
                 if (spent >= budget) {
@@ -214,12 +258,22 @@ public final class SeasonWorldService {
         Material type = block.getType();
         if (type == Material.ICE || type == Material.FROSTED_ICE) {
             if (block.getRelative(BlockFace.UP).getType().isAir()) {
-                block.setType(Material.WATER, false);
+                block.setType(Material.WATER, true);
+                updateSnowyBelow(block);
             }
             return;
         }
         if (type == Material.SNOW || type == Material.SNOW_BLOCK || type == Material.POWDER_SNOW) {
-            block.setType(Material.AIR, false);
+            block.setType(Material.AIR, true);
+            updateSnowyBelow(block);
+        }
+    }
+
+    private void updateSnowyBelow(Block block) {
+        Block below = block.getRelative(BlockFace.DOWN);
+        if (below.getBlockData() instanceof Snowable snowable && snowable.isSnowy()) {
+            snowable.setSnowy(false);
+            below.setBlockData(snowable, true);
         }
     }
 

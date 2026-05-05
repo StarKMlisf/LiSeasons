@@ -150,7 +150,7 @@ public final class SeasonManager {
         if (this.plugin.getBiomeColorService() != null) {
             this.plugin.getBiomeColorService().refreshWorld(world);
         }
-        if (state.season() == Season.SPRING && this.plugin.getSeasonWorldService() != null) {
+        if (state.season() != Season.WINTER && this.plugin.getSeasonWorldService() != null) {
             this.plugin.getSeasonWorldService().queueSpringMelt(world);
         }
 

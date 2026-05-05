@@ -21,6 +21,7 @@ com\liseasons\config\TemperatureRangeConfig.class
 com\liseasons\LISeasonsPlugin.class
 com\liseasons\climate\TemperatureEventService.class
 com\liseasons\climate\TemperatureEffectExecutor.class
+com\liseasons\visual\SeasonBiomeColorService$ChunkPaintTask.class
 com\liseasons\climate\TemperatureModifier.class
 com\liseasons\season\SeasonManager.class
 com\liseasons\season\WorldSeasonData.class

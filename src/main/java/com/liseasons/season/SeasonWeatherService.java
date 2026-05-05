@@ -24,7 +24,7 @@ public final class SeasonWeatherService {
             return;
         }
 
-        Runnable updateTask = () -> applyWeather(world, effectConfig);
+        Runnable updateTask = () -> applyWeather(world, state.season(), effectConfig);
         if (PlatformUtil.isFolia(this.plugin)) {
             int chunkX = world.getSpawnLocation().getBlockX() >> 4;
             int chunkZ = world.getSpawnLocation().getBlockZ() >> 4;
@@ -34,14 +34,24 @@ public final class SeasonWeatherService {
         updateTask.run();
     }
 
-    private void applyWeather(World world, SeasonEffectConfig effectConfig) {
-        boolean shouldRain = rollChance(effectConfig.rainChance());
-        boolean shouldThunder = shouldRain && rollChance(effectConfig.thunderChance());
+    private void applyWeather(World world, Season season, SeasonEffectConfig effectConfig) {
+        boolean shouldRain;
+        boolean shouldThunder;
+
+        if (season == Season.WINTER) {
+            // Minecraft 的“下雪”依赖 storm=true；如果冬天关闭 storm，雨和雪都会消失。
+            shouldRain = true;
+            // 冬天默认关闭雷暴，避免暴雪天气里出现雷暴。
+            shouldThunder = false;
+        } else {
+            shouldRain = rollChance(effectConfig.rainChance());
+            shouldThunder = shouldRain && rollChance(effectConfig.thunderChance());
+        }
 
         world.setStorm(shouldRain);
         world.setThundering(shouldThunder);
         world.setWeatherDuration(shouldRain ? randomTicks(6000, 18000) : randomTicks(12000, 24000));
-        world.setThunderDuration(shouldThunder ? randomTicks(4000, 12000) : randomTicks(12000, 24000));
+        world.setThunderDuration(shouldThunder ? randomTicks(4000, 12000) : 0);
     }
 
     private boolean rollChance(int chance) {

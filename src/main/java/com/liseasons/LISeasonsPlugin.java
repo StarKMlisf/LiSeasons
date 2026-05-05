@@ -99,6 +99,7 @@ public final class LISeasonsPlugin extends JavaPlugin {
         this.messageManager.reload();
         this.seasonManager.reload(this.liConfig);
         stopTickers();
+        this.realTimeClockService.tickWorlds();
         startTickers();
         if (this.biomeColorService != null) {
             this.biomeColorService.start();

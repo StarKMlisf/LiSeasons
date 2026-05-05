@@ -6,11 +6,15 @@ import com.liseasons.season.Season;
 import com.liseasons.season.SeasonState;
 import com.liseasons.util.PlatformUtil;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.bukkit.Chunk;
 import org.bukkit.NamespacedKey;
@@ -24,6 +28,8 @@ import org.bukkit.util.Vector;
 public final class SeasonBiomeColorService {
     private final LISeasonsPlugin plugin;
     private final Map<Season, Biome> targetBiomes = new EnumMap<>(Season.class);
+    private final Deque<ChunkPaintTask> paintQueue = new ArrayDeque<>();
+    private final Set<Long> queuedChunks = ConcurrentHashMap.newKeySet();
     private final AtomicLong paintedChunks = new AtomicLong(0);
 
     private ScheduledHandle taskHandle;
@@ -74,6 +80,7 @@ public final class SeasonBiomeColorService {
             return;
         }
         this.plugin.getLogger().info("季节色调已切换，正在按玩家周围区块分批刷新草地和树叶颜色。");
+        queueLoadedChunks(world);
         repaintWorldPlayers(world, true);
     }
 
@@ -91,8 +98,60 @@ public final class SeasonBiomeColorService {
     }
 
     private void repaintOnlinePlayers(boolean transitionBoost) {
+        processPaintQueue();
         for (World world : this.plugin.getServer().getWorlds()) {
             repaintWorldPlayers(world, transitionBoost);
+        }
+    }
+
+    private void queueLoadedChunks(World world) {
+        SeasonState state = this.plugin.getSeasonManager().getState(world);
+        if (state == null) {
+            return;
+        }
+        Biome target = this.targetBiomes.get(state.season());
+        if (target == null) {
+            return;
+        }
+        int queued = 0;
+        for (Chunk chunk : world.getLoadedChunks()) {
+            long key = chunkKey(chunk.getWorld(), chunk.getX(), chunk.getZ());
+            if (this.queuedChunks.add(key)) {
+                this.paintQueue.addLast(new ChunkPaintTask(world, chunk.getX(), chunk.getZ(), key, target));
+                queued++;
+            }
+        }
+        if (queued > 0) {
+            this.plugin.getLogger().info("季节色调已加入慢速覆盖队列，待处理区块 " + queued + " 个。");
+        }
+    }
+
+    private void processPaintQueue() {
+        SeasonBiomeColorConfig config = this.plugin.getLiConfig().biomeColorConfig();
+        int budget = config.spoofBudgetChunksPerTick();
+        while (budget > 0 && !this.paintQueue.isEmpty()) {
+            ChunkPaintTask task = this.paintQueue.removeFirst();
+            this.queuedChunks.remove(task.key());
+            if (!task.world().isChunkLoaded(task.chunkX(), task.chunkZ())) {
+                continue;
+            }
+            if (PlatformUtil.isFolia(this.plugin)) {
+                this.plugin.getServer().getRegionScheduler().execute(
+                        this.plugin,
+                        task.world(),
+                        task.chunkX(),
+                        task.chunkZ(),
+                        () -> {
+                            if (!task.world().isChunkLoaded(task.chunkX(), task.chunkZ())) {
+                                return;
+                            }
+                            paintChunk(task.world().getChunkAt(task.chunkX(), task.chunkZ()), task.target(), config);
+                        }
+                );
+            } else {
+                paintChunk(task.world().getChunkAt(task.chunkX(), task.chunkZ()), task.target(), config);
+            }
+            budget--;
         }
     }
 
@@ -255,6 +314,15 @@ public final class SeasonBiomeColorService {
         }
     }
 
+    private long chunkKey(World world, int chunkX, int chunkZ) {
+        long positionKey = (((long) chunkX) & 0xffffffffL) << 32 | (((long) chunkZ) & 0xffffffffL);
+        long worldKey = world.getUID().getMostSignificantBits() ^ world.getUID().getLeastSignificantBits();
+        return positionKey ^ worldKey;
+    }
+
     private record ChunkOffset(int dx, int dz, int distance, double forwardScore) {
+    }
+
+    private record ChunkPaintTask(World world, int chunkX, int chunkZ, long key, Biome target) {
     }
 }

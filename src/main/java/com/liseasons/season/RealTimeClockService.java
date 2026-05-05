@@ -40,7 +40,7 @@ public final class RealTimeClockService {
 
     private void restoreDaylightCycle() {
         for (World world : this.plugin.getServer().getWorlds()) {
-            if (world.getEnvironment() != World.Environment.NORMAL) {
+            if (!this.plugin.getSeasonManager().isEnabled(world) || world.getEnvironment() != World.Environment.NORMAL) {
                 continue;
             }
             runWorldTask(world, () -> {
