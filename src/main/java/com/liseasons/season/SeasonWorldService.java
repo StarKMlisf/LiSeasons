@@ -1,0 +1,294 @@
+package com.liseasons.season;
+
+import com.liseasons.LISeasonsPlugin;
+import com.liseasons.config.SeasonWaterCycleConfig;
+import com.liseasons.util.PlatformUtil;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Locale;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.Biome;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Levelled;
+import org.bukkit.entity.Player;
+
+public final class SeasonWorldService {
+    private final LISeasonsPlugin plugin;
+    private final Deque<ChunkMeltTask> transitionMeltQueue = new ArrayDeque<>();
+    private final Set<Long> queuedChunks = ConcurrentHashMap.newKeySet();
+
+    public SeasonWorldService(LISeasonsPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void tickPlayers() {
+        SeasonWaterCycleConfig config = this.plugin.getLiConfig().seasonWorldRulesConfig().waterCycleConfig();
+        if (!config.enabled()) {
+            return;
+        }
+        processTransitionMeltQueue(config);
+        for (Player player : this.plugin.getServer().getOnlinePlayers()) {
+            if (!player.isOnline() || player.isDead()) {
+                continue;
+            }
+            player.getScheduler().run(this.plugin, task -> processNearPlayer(player, config), () -> { });
+        }
+    }
+
+    public void queueSpringMelt(World world) {
+        SeasonWaterCycleConfig config = this.plugin.getLiConfig().seasonWorldRulesConfig().waterCycleConfig();
+        if (!config.enabled() || world.getEnvironment() != World.Environment.NORMAL) {
+            return;
+        }
+
+        int radius = config.transitionMeltRadiusChunks();
+        int queued = 0;
+        for (Player player : world.getPlayers()) {
+            int centerX = player.getLocation().getBlockX() >> 4;
+            int centerZ = player.getLocation().getBlockZ() >> 4;
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    int chunkX = centerX + dx;
+                    int chunkZ = centerZ + dz;
+                    if (!world.isChunkLoaded(chunkX, chunkZ)) {
+                        continue;
+                    }
+                    long key = chunkKey(world, chunkX, chunkZ);
+                    if (this.queuedChunks.add(key)) {
+                        this.transitionMeltQueue.addLast(new ChunkMeltTask(world, chunkX, chunkZ, key));
+                        queued++;
+                    }
+                }
+            }
+        }
+        if (queued > 0) {
+            this.plugin.getLogger().info("春季融雪任务已加入队列，待处理区块 " + queued + " 个。");
+        }
+    }
+
+    private void processNearPlayer(Player player, SeasonWaterCycleConfig config) {
+        SeasonState state = this.plugin.getSeasonManager().getState(player.getWorld());
+        if (state == null) {
+            return;
+        }
+        if (state.season() != Season.WINTER && state.season() != Season.SPRING) {
+            return;
+        }
+
+        World world = player.getWorld();
+        Location origin = player.getLocation();
+        int radius = config.searchRadius();
+        int x = origin.getBlockX() + ThreadLocalRandom.current().nextInt(-radius, radius + 1);
+        int z = origin.getBlockZ() + ThreadLocalRandom.current().nextInt(-radius, radius + 1);
+        if (!world.isChunkLoaded(x >> 4, z >> 4)) {
+            return;
+        }
+
+        int y = world.getHighestBlockYAt(x, z);
+        Block top = world.getBlockAt(x, y, z);
+        if (isExemptBiome(world.getBiome(x, y, z), config)) {
+            return;
+        }
+
+        if (state.season() == Season.WINTER) {
+            tryFreeze(top, config);
+            return;
+        }
+        tryMelt(top, config);
+    }
+
+    private void tryFreeze(Block top, SeasonWaterCycleConfig config) {
+        if (ThreadLocalRandom.current().nextInt(100) >= config.winterFreezeChancePercent()) {
+            return;
+        }
+        if (top.getType() != Material.WATER) {
+            return;
+        }
+        if (!(top.getBlockData() instanceof Levelled levelled) || levelled.getLevel() != 0) {
+            return;
+        }
+        if (!top.getRelative(org.bukkit.block.BlockFace.UP).getType().isAir()) {
+            return;
+        }
+        top.setType(Material.ICE, false);
+    }
+
+    private void tryMelt(Block top, SeasonWaterCycleConfig config) {
+        if (ThreadLocalRandom.current().nextInt(100) >= config.springMeltChancePercent()) {
+            return;
+        }
+        if (!top.getRelative(org.bukkit.block.BlockFace.UP).getType().isAir()) {
+            return;
+        }
+        if (top.getType() == Material.ICE || top.getType() == Material.FROSTED_ICE) {
+            top.setType(Material.WATER, false);
+            return;
+        }
+        if (top.getType() == Material.SNOW || top.getType() == Material.SNOW_BLOCK) {
+            top.setType(Material.AIR, false);
+        }
+    }
+
+    private void processTransitionMeltQueue(SeasonWaterCycleConfig config) {
+        if (PlatformUtil.isFolia(this.plugin)) {
+            processTransitionMeltQueueFolia(config);
+            return;
+        }
+        int budget = config.transitionMeltBudgetPerTick();
+        while (budget > 0 && !this.transitionMeltQueue.isEmpty()) {
+            ChunkMeltTask task = this.transitionMeltQueue.peekFirst();
+            if (task == null) {
+                return;
+            }
+            if (!task.world().isChunkLoaded(task.chunkX(), task.chunkZ())) {
+                this.transitionMeltQueue.removeFirst();
+                this.queuedChunks.remove(task.key());
+                continue;
+            }
+            int spent = meltChunkSlice(task, config, budget);
+            budget -= Math.max(1, spent);
+            if (task.finished()) {
+                task.world().refreshChunk(task.chunkX(), task.chunkZ());
+                this.transitionMeltQueue.removeFirst();
+                this.queuedChunks.remove(task.key());
+            }
+        }
+    }
+
+    private void processTransitionMeltQueueFolia(SeasonWaterCycleConfig config) {
+        int tasks = Math.max(1, Math.min(8, config.transitionMeltBudgetPerTick() / 256));
+        while (tasks > 0 && !this.transitionMeltQueue.isEmpty()) {
+            ChunkMeltTask task = this.transitionMeltQueue.removeFirst();
+            this.queuedChunks.remove(task.key());
+            if (!task.world().isChunkLoaded(task.chunkX(), task.chunkZ())) {
+                continue;
+            }
+            this.plugin.getServer().getRegionScheduler().execute(
+                    this.plugin,
+                    task.world(),
+                    task.chunkX(),
+                    task.chunkZ(),
+                    () -> {
+                        while (!task.finished()) {
+                            meltChunkSlice(task, config, config.transitionMeltBudgetPerTick());
+                        }
+                        task.world().refreshChunk(task.chunkX(), task.chunkZ());
+                    }
+            );
+            tasks--;
+        }
+    }
+
+    private int meltChunkSlice(ChunkMeltTask task, SeasonWaterCycleConfig config, int budget) {
+        World world = task.world();
+        int baseX = task.chunkX() << 4;
+        int baseZ = task.chunkZ() << 4;
+        int spent = 0;
+        while (spent < budget && !task.finished()) {
+            int x = baseX + task.localX();
+            int z = baseZ + task.localZ();
+            int highestY = world.getHighestBlockYAt(x, z) + 2;
+            for (int y = Math.min(world.getMaxHeight() - 1, highestY); y >= world.getMinHeight(); y--) {
+                Block block = world.getBlockAt(x, y, z);
+                if (isExemptBiome(world.getBiome(x, y, z), config)) {
+                    continue;
+                }
+                meltBlock(block);
+                spent++;
+                if (spent >= budget) {
+                    break;
+                }
+            }
+            task.advanceColumn();
+        }
+        return spent;
+    }
+
+    private void meltBlock(Block block) {
+        Material type = block.getType();
+        if (type == Material.ICE || type == Material.FROSTED_ICE) {
+            if (block.getRelative(BlockFace.UP).getType().isAir()) {
+                block.setType(Material.WATER, false);
+            }
+            return;
+        }
+        if (type == Material.SNOW || type == Material.SNOW_BLOCK || type == Material.POWDER_SNOW) {
+            block.setType(Material.AIR, false);
+        }
+    }
+
+    private boolean isExemptBiome(Biome biome, SeasonWaterCycleConfig config) {
+        String biomeName = biome.getKey().asString().toLowerCase(Locale.ROOT);
+        for (String entry : config.exemptBiomes()) {
+            String token = entry.toLowerCase(Locale.ROOT);
+            if (!token.isBlank() && biomeName.contains(token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private long chunkKey(World world, int chunkX, int chunkZ) {
+        long positionKey = (((long) chunkX) & 0xffffffffL) << 32 | (((long) chunkZ) & 0xffffffffL);
+        long worldKey = world.getUID().getMostSignificantBits() ^ world.getUID().getLeastSignificantBits();
+        return positionKey ^ worldKey;
+    }
+
+    private static final class ChunkMeltTask {
+        private final World world;
+        private final int chunkX;
+        private final int chunkZ;
+        private final long key;
+        private int localX;
+        private int localZ;
+
+        private ChunkMeltTask(World world, int chunkX, int chunkZ, long key) {
+            this.world = world;
+            this.chunkX = chunkX;
+            this.chunkZ = chunkZ;
+            this.key = key;
+        }
+
+        private World world() {
+            return this.world;
+        }
+
+        private int chunkX() {
+            return this.chunkX;
+        }
+
+        private int chunkZ() {
+            return this.chunkZ;
+        }
+
+        private long key() {
+            return this.key;
+        }
+
+        private int localX() {
+            return this.localX;
+        }
+
+        private int localZ() {
+            return this.localZ;
+        }
+
+        private void advanceColumn() {
+            this.localZ++;
+            if (this.localZ >= 16) {
+                this.localZ = 0;
+                this.localX++;
+            }
+        }
+
+        private boolean finished() {
+            return this.localX >= 16;
+        }
+    }
+}

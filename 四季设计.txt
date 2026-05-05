@@ -1,0 +1,708 @@
+LISeasons 我的世界季节+24节气插件（详细框架+配置文件）
+一、插件基础信息（必选）
+- 插件名称：LISeasons
+- 核心功能：实现Minecraft服务器四季自动切换、24节气精准联动，关联天气、作物、生物、粒子等场景，支持手动配置与指令控制，节气同步公历日期对应关系
+- 运行环境：Paper1.21.11 folia1.21.11（优先Paper以保证粒子、天气效果稳定性）
+- 依赖情况：无第三方插件依赖，原生Java开发，仅依赖Bukkit/Spigot/Paper核心API
+- 适配范围：支持多世界配置（主世界、下界、末地可单独设置是否启用季节），适配所有原生生物群系
+- 核心设计原则：低性能消耗（定时任务优化）、高可配置性（所有效果可自定义）、高兼容性（不修改原生方块/生物逻辑）、节气与公历日期精准对应
+二、详细框架结构（包+类+职责）
+2.1 整体包结构（分层设计，解耦清晰）
+LISeasons/
+├── src/main/java/com/liseasons/                    # 当前已落地的主包结构
+│   ├── LISeasonsPlugin.java                        # 插件主类（加载配置、注册指令/监听器、启动轮询）
+│   ├── MessageManager.java                         # MiniMessage 消息管理（含占位符与渐变色消息）
+│   ├── calendar/
+│   │   ├── CalendarMenu.java                       # 多页日历菜单构建与打开逻辑
+│   │   ├── CalendarMenuHolder.java                 # 日历菜单页状态容器
+│   │   ├── CalendarMenuListener.java               # 菜单点击与翻页拦截
+│   │   └── CalendarPage.java                       # 日历分页枚举（总览、本月、全年、温度）
+│   ├── climate/
+│   │   ├── TemperatureService.java                 # 温度计算服务（季节+群系+昼夜+天气）
+│   │   └── TemperatureSnapshot.java                # 温度快照对象
+│   ├── command/
+│   │   └── SeasonCommand.java                      # 主指令与参数补全（含日历菜单入口）
+│   ├── config/
+│   │   ├── ConfigManager.java                     # 配置加载与重载
+│   │   ├── PluginConfig.java                      # 配置快照对象
+│   │   ├── SeasonEffectConfig.java                # 单季节效果配置（基础温度、作物倍率、天气倾向）
+│   │   ├── CalendarConfig.java                    # 日历菜单配置
+│   │   ├── TemperatureConfig.java                 # 温度显示与修正配置
+│   │   └── VisualEffectsConfig.java               # 视觉特效总配置
+│   ├── integration/customcrops/
+│   │   └── CustomCropsHook.java                   # CustomCrops 软接入（反射注册 SeasonProvider）
+│   ├── listener/
+│   │   ├── PlayerJoinListener.java                # 玩家加入提示当前季节/节气
+│   │   ├── CropGrowListener.java                  # 作物生长联动（春夏加速、冬季减速）
+│   │   └── WeatherLinkListener.java               # 天气联动（按季节拦截降雨/雷暴）
+│   ├── scheduler/
+│   │   ├── SchedulerAdapter.java                  # 调度抽象接口
+│   │   ├── ScheduledHandle.java                   # 调度任务句柄
+│   │   ├── BukkitSchedulerAdapter.java            # Bukkit 调度实现
+│   │   ├── FoliaSchedulerAdapter.java             # Folia 全局区域调度实现
+│   │   └── SchedulerFactory.java                  # 调度实现选择工厂
+│   └── season/
+│       ├── Season.java                            # 四季枚举
+│       ├── SolarTerm.java                         # 二十四节气枚举
+│       ├── SeasonState.java                       # 当前季节与节气值对象
+│       ├── WorldSeasonData.java                   # 世界季节状态与自动模式记录
+│       ├── TimeCalculator.java                    # 现实日期/世界时间节气计算
+│       └── SeasonManager.java                     # 世界季节状态管理与季节切换广播
+│   └── visual/
+│       ├── SeasonVisualManager.java               # 玩家视觉特效总调度器
+│       ├── SeasonVisualEffect.java                # 视觉效果统一接口
+│       ├── AuroraVisualEffect.java                # 冬季夜晚极光
+│       ├── BlizzardVisualEffect.java              # 冬季暴风雪与积雪
+│       ├── FallingLeavesVisualEffect.java         # 季节落叶粒子
+│       ├── TreeSnowVisualEffect.java              # 冬季树枝落雪
+│       └── AppleDropVisualEffect.java             # 夏季橡树掉苹果
+├── src/main/resources/
+│   ├── plugin.yml                                 # 插件清单
+│   ├── config.yml                                 # 当前运行配置
+│   └── messages.yml                               # 消息与渐变色文本
+├── pom.xml                                        # Maven 构建文件
+└── 四季设计.txt                                    # 设计文档
+2.2 核心类详细职责（关键类说明）
+2.2.1 主类 LISeasons.java
+插件入口，负责初始化所有核心组件，启动定时任务，注册指令和监听器，是插件的“总开关”。
+- onEnable()：插件启用时执行，加载配置、初始化SeasonManager、注册指令/监听器、启动定时任务（检查季节/节气切换，同步公历日期与节气对应关系）。
+- onDisable()：插件卸载时执行，停止定时任务、释放资源，输出卸载日志。
+- 提供getter方法，供其他类获取核心组件（如SeasonManager、ConfigManager）。
+2.2.2 季节/节气核心类（season包）
+- Season.java（枚举）：定义四季（SPRING、SUMMER、AUTUMN、WINTER），当前代码中的基础温度放在 `SeasonEffectConfig` 内，由配置驱动。
+- SolarTerm.java（枚举）：定义24节气，每个节气包含所属季节、节气顺序、特殊标识（如是否有特殊效果）、对应现实公历日期（精准对应用户提供的日期）、对应现实节气时间参考。
+- SeasonManager.java：核心逻辑类，负责管理所有世界的季节/节气状态，触发季节/节气切换，调用对应效果，同步公历日期与节气的关联。
+- WorldSeasonData.java：存储单个世界的季节数据（当前季节、当前节气、已过天数、剩余天数），支持多世界独立管理。
+- TimeCalculator.java：计算逻辑类，根据游戏总天数、现实公历日期，双重计算当前季节、当前节气，判断是否达到切换条件（如季节到期、节气到期、公历日期触发）。
+- TemperatureService.java：根据季节基础温度、生物群系、昼夜、下雨和地表/地下状态计算玩家当前体感温度。
+- CalendarMenu.java：当前已升级为多页挂历菜单，包含“总览页、本月节气页、全年节气页、温度说明页”，由底部页签按钮慢慢翻页查看。
+2.2.5 24节气与公历日期对应表（分12个月）
+插件内节气切换逻辑将同步以下公历日期，可在config.yml中配置“是否按公历日期触发节气”，默认启用双重校验（游戏天数+公历日期），确保节气切换精准性，对应关系如下：
+月份
+节气名称
+公历日期
+所属季节
+1月
+小寒
+1月5日
+冬季
+1月
+大寒
+1月20日
+冬季
+2月
+立春
+2月4日
+春季
+2月
+雨水
+2月19日
+春季
+3月
+惊蛰
+3月6日
+春季
+3月
+春分
+3月21日
+春季
+4月
+清明
+4月5日
+春季
+4月
+谷雨
+4月20日
+春季
+5月
+立夏
+5月6日
+夏季
+5月
+小满
+5月21日
+夏季
+6月
+芒种
+6月6日
+夏季
+6月
+夏至
+6月21日
+夏季
+7月
+小暑
+7月7日
+夏季
+7月
+大暑
+7月23日
+夏季
+8月
+立秋
+8月8日
+秋季
+8月
+处暑
+8月23日
+秋季
+9月
+白露
+9月8日
+秋季
+9月
+秋分
+9月23日
+秋季
+10月
+寒露
+10月8日
+秋季
+10月
+霜降
+10月24日
+秋季
+11月
+立冬
+11月8日
+冬季
+11月
+小雪
+11月22日
+冬季
+12月
+大雪
+12月7日
+冬季
+12月
+冬至
+12月22日
+冬季
+2.2.3 效果类（effect包）
+当前落地版优先采用“事件驱动 + 低频轮询”思路，不单独建立庞大的 effect 包，先把轻量效果拆到各自监听器或管理器中，避免养老服出现高频扫描负担。
+- CropGrowListener：基于 BlockGrowEvent 控制作物生长倍率。春夏会在一次原版成长后追加额外年龄，冬季则按概率拦截成长。
+- WeatherLinkListener：基于 WeatherChangeEvent 与 ThunderChangeEvent 控制下雨、打雷是否放行；季节切换时由 SeasonManager 做一次轻量天气刷新。
+- SeasonManager：负责节气变化时的提示音、粒子、广播和天气倾向刷新，不做持续型全图天气扫描。
+- 预留规划项：TemperatureEffect、EntityEffect、BlockPhysicsEffect 仍属于后续扩展，不在当前第一阶段实现范围内。
+2.2.4 指令与监听器
+- SeasonCommand：当前已实现 `help`、`info`、`reload`、`set season`、`set term`、`next`、`auto`，并带世界名、季节名、节气名参数补全。
+- PlayerJoinListener：玩家进服时显示当前世界季节与节气提示。
+- CropGrowListener：负责作物联动，不做全图扫描，只在原版成长事件发生时计算倍率。
+- WeatherLinkListener：负责天气联动，只在天气即将变化时做概率判定。
+- 季节自动轮转：由 SeasonManager + SchedulerAdapter 完成，Paper 与 Folia 共用一套上层逻辑。
+- SeasonVisualManager：负责在线玩家视觉效果轮询，不直接修改整张地图，而是按玩家附近情况渲染极光、暴风雪、落叶、树上落雪与橡树掉果。
+- AuroraVisualEffect：仅在冬季夜晚、晴朗且满足日条件时触发，营造壮丽夜空。
+- BlizzardVisualEffect：冬季暴风雪期间生成雪雾粒子，并按概率为附近地表补上一层积雪。
+- FallingLeavesVisualEffect：春夏秋在树叶附近生成不同色调的飘叶粒子，其中秋季最明显。
+- TreeSnowVisualEffect：冬季在叶块附近生成轻落雪花，增强枝头积雪氛围。
+- AppleDropVisualEffect：夏季在橡树叶附近低概率掉落苹果，提供自然互动感。
+三、详细配置文件（可直接复制使用，注释完整）
+3.1 核心配置文件 config.yml（主配置）
+# LISeasons 当前代码已落地的 config.yml 以 resources/config.yml 为准
+# 下面旧版大配置仍保留作后续规划参考，但当前真正生效的核心键名如下：
+# 1. time.use-gregorian-trigger
+# 2. time.refresh-interval-seconds
+# 3. time.season-duration-days
+# 4. time.gregorian-dates
+# 5. worlds.enable-all / worlds.allowed / worlds.denied
+# 6. messages.broadcast-change / messages.join-notify
+# 7. effects.change-particle / effects.change-sound
+# 8. integration.customcrops.enable
+# 9. calendar.title / calendar.size
+# 10. temperature.night-penalty / storm-penalty / underground-penalty / display-decimals
+# 11. visual-effects.interval-ticks / search-radius
+# 12. visual-effects.aurora / blizzard / falling-leaves / tree-snow / apple-drop
+# 13. season-effects.<season>.base-temperature / crop-grow-multiplier / rain-chance / thunder-chance
+# 说明：后文较长的旧版配置块包含更多长期规划项；当前日历菜单、温度系统和部分环境视觉效果已经进入可运行阶段。
+
+# ==============================================
+# 1. 基础时间配置（控制季节、节气的持续时间）
+# ==============================================
+time:
+  # 游戏天数与现实时间对应（1游戏天 = 20分钟）
+  game-day-to-real-minute: 20
+  # 每个季节持续的游戏天数（默认24天，约8小时）
+  season-duration:
+    spring: 24      # 春季持续天数（对应立春-谷雨，公历2月4日-4月20日）
+    summer: 24      # 夏季持续天数（对应立夏-大暑，公历5月6日-7月23日）
+    autumn: 24      # 秋季持续天数（对应立秋-霜降，公历8月8日-10月24日）
+    winter: 24      # 冬季持续天数（对应立冬-大寒，公历11月8日-次年1月20日）
+  # 24节气配置（每个季节包含6个节气，自动均分季节天数，同步公历日期）
+  solar-term:
+    enable: true    # 是否启用24节气系统（true=启用，false=仅启用四季）
+    per-season-count: 6 # 每个季节的节气数量（固定6个，不可修改）
+    # 节气持续天数（自动计算：季节天数 / 6，无需手动修改）
+    # 例如：季节24天 → 每个节气4天
+    auto-calculate-duration: true
+    # 节气切换时是否触发特殊效果（true=触发，false=仅提示）
+    enable-special-effect: true
+    # 关键配置：是否按公历日期触发节气切换（true=双重校验，false=仅按游戏天数）
+    enable-gregorian-trigger: true
+    # 24节气与公历日期对应表（与用户提供的日期完全一致，不可随意修改）
+    gregorian对应:
+      lichun: 02-04    # 立春：2月4日
+      yushui: 02-19    # 雨水：2月19日
+      jingzhe: 03-06   # 惊蛰：3月6日
+      chunfen: 03-21   # 春分：3月21日
+      qingming: 04-05  # 清明：4月5日
+      guyu: 04-20      # 谷雨：4月20日
+      lixia: 05-06     # 立夏：5月6日
+      xiaoman: 05-21   # 小满：5月21日
+      mangzhong: 06-06 # 芒种：6月6日
+      xiazhi: 06-21    # 夏至：6月21日
+      xiaoshu: 07-07   # 小暑：7月7日
+      dashu: 07-23     # 大暑：7月23日
+      liqiu: 08-08     # 立秋：8月8日
+      chushu: 08-23    # 处暑：8月23日
+      bailu: 09-08     # 白露：9月8日
+      qiufen: 09-23    # 秋分：9月23日
+      hanlu: 10-08     # 寒露：10月8日
+      shuangjiang: 10-24 # 霜降：10月24日
+      lidong: 11-08    # 立冬：11月8日
+      xiaoxue: 11-22   # 小雪：11月22日
+      daxue: 12-07     # 大雪：12月7日
+      dongzhi: 12-22   # 冬至：12月22日
+      xiaohan: 01-05   # 小寒：1月5日
+      dahhan: 01-20    # 大寒：1月20日
+    # 日期校验偏差（单位：天），避免公历日期波动导致节气切换异常
+    date-deviation: 1
+
+# ==============================================
+# 2. 世界配置（控制哪些世界启用季节/节气系统）
+# ==============================================
+worlds:
+  enable-all: false  # 是否所有世界都启用（true=所有世界，false=仅指定世界）
+  # 指定启用季节/节气的世界（enable-all=false时生效）
+  allowed-worlds:
+    - world          # 主世界（必选，默认启用）
+    # - world_nether  # 下界（默认禁用，如需启用取消注释）
+    # - world_the_end # 末地（默认禁用，如需启用取消注释）
+  # 禁用季节/节气的世界（即使在allowed-worlds中，也会被禁用）
+  disabled-worlds:
+    - test_world     # 示例：测试世界禁用
+
+# ==============================================
+# 3. 四季效果配置（每个季节的基础效果，可被节气效果覆盖）
+# ==============================================
+season-effects:
+  # 春季效果（立春-谷雨，公历2月4日-4月20日）
+  spring:
+    temperature: 18   # 模拟温度（单位：℃，仅用于逻辑判断，不显示）
+    crop-grow-multiplier: 1.8 # 作物生长倍率（1.0=默认，>1加速，<1减速）
+    grass-growth: true # 是否加速草方块生长（true=加速，false=默认）
+    flower-spawn: true # 是否增加花卉生成（true=增加，false=默认）
+    rain-chance: 40   # 降雨概率（0-100，单位：%）
+    thunder-chance: 5 # 雷暴概率（0-100，单位：%）
+    particle:
+      enable: true    # 是否启用季节粒子
+      type: GREEN     # 粒子类型（GREEN=绿色粒子，可填MC原生粒子名，如HEART）
+      density: 0.5    # 粒子密度（0.1-2.0，数值越大粒子越多）
+      interval: 20    # 粒子生成间隔（单位：tick，20tick=1秒）
+    sound:
+      enable: true    # 季节切换时是否播放音效
+      type: BLOCK_GRASS_BREAK # 音效类型（MC原生音效名）
+      volume: 1.0     # 音效音量（0.0-2.0）
+      pitch: 1.0      # 音效音调（0.5-2.0）
+
+  # 夏季效果（立夏-大暑，公历5月6日-7月23日）
+  summer:
+    temperature: 32   # 模拟温度
+    crop-grow-multiplier: 2.2 # 作物生长倍率（夏季生长最快）
+    grass-growth: true
+    flower-spawn: true
+    rain-chance: 20   # 降雨概率降低
+    thunder-chance: 10 # 雷暴概率提升
+    particle:
+      enable: true
+      type: YELLOW    # 黄色粒子（模拟阳光）
+      density: 0.6
+      interval: 15
+    sound:
+      enable: true
+      type: BLOCK_WATER_AMBIENT # 水声（模拟夏季降雨）
+      volume: 1.0
+      pitch: 1.2
+
+  # 秋季效果（立秋-霜降，公历8月8日-10月24日）
+  autumn:
+    temperature: 16   # 模拟温度
+    crop-grow-multiplier: 1.2 # 作物生长倍率降低
+    leaf-decay-speed: 1.5 # 树叶枯萎速度（1.0=默认，>1加速）
+    grass-color: ORANGE # 草方块颜色（ORANGE=橙色，可填RED、YELLOW等）
+    rain-chance: 30   # 降雨概率中等
+    thunder-chance: 3 # 雷暴概率降低
+    particle:
+      enable: true
+      type: ORANGE    # 橙色粒子（模拟落叶）
+      density: 0.4
+      interval: 25
+    sound:
+      enable: true
+      type: BLOCK_LEAVES_BREAK # 落叶声
+      volume: 0.8
+      pitch: 0.9
+
+  # 冬季效果（立冬-大寒，公历11月8日-次年1月20日）
+  winter:
+    temperature: -5   # 模拟温度（低于0℃，触发结冰）
+    crop-grow-multiplier: 0.4 # 作物生长倍率极低（几乎停止）
+    snow-form-chance: 60 # 降雪概率（0-100，单位：%）
+    ice-form: true    # 水方块是否结冰（true=结冰，false=不结冰）
+    grass-color: WHITE # 草方块颜色（白色，模拟积雪）
+    rain-chance: 0    # 冬季无降雨，替换为降雪
+    thunder-chance: 0 # 冬季无雷暴
+    particle:
+      enable: true
+      type: WHITE     # 白色粒子（模拟雪花）
+      density: 0.7
+      interval: 10
+    sound:
+      enable: true
+      type: BLOCK_SNOW_PLACE # 下雪声
+      volume: 0.9
+      pitch: 0.8
+
+# ==============================================
+# 4. 24节气特殊效果配置（覆盖对应季节的基础效果）
+# ==============================================
+solar-term-effects:
+  # 立春（春季第1个节气，公历2月4日）
+  lichun:
+    crop-grow-multiplier: 2.0 # 临时提升生长倍率
+    particle:
+      type: GREEN     # 绿色粒子（模拟萌芽）
+      density: 0.8
+    message: "立春已至（2月4日），万物复苏，作物生长加速！" # 节气切换提示，新增公历日期
+
+  # 雨水（春季第2个节气，公历2月19日）
+  yushui:
+    rain-chance: 80   # 降雨概率大幅提升
+    crop-boost: 1.5   # 额外作物生长加成
+    message: "雨水降临（2月19日），滋润万物，降雨概率提升！"
+
+  # 惊蛰（春季第3个节气，公历3月6日）
+  jingzhe:
+    mob-spawn-boost: 1.2 # 生物生成概率提升
+    thunder-chance: 8 # 雷暴概率提升（模拟惊雷）
+    message: "惊蛰雷声起（3月6日），百虫复苏，生物生成增多！"
+
+  # 春分（春季第4个节气，公历3月21日）
+  chunfen:
+    day-night-equal: true # 昼夜等长（游戏内白天黑夜各10分钟）
+    particle:
+      type: BLUE      # 蓝色粒子（模拟春风）
+    message: "春分昼夜等长（3月21日），暖意渐浓！"
+
+  # 清明（春季第5个节气，公历4月5日）
+  qingming:
+    crop-grow-multiplier: 2.2 # 作物生长倍率拉满
+    particle:
+      type: BLUE      # 蓝色粒子（模拟细雨）
+    message: "清明时节雨纷纷（4月5日），作物生长旺盛！"
+
+  # 谷雨（春季第6个节气，公历4月20日）
+  guyu:
+    rain-chance: 70   # 降雨概率高
+    flower-spawn: true # 花卉大量生成
+    message: "谷雨润田（4月20日），百花盛开，花卉生成增多！"
+
+  # 立夏（夏季第1个节气，公历5月6日）
+  lixia:
+    temperature: 35   # 温度提升
+    thunder-chance: 12 # 雷暴概率提升
+    message: "立夏已至（5月6日），暑气渐生，雷暴增多！"
+
+  # 小满（夏季第2个节气，公历5月21日）
+  xiaoman:
+    crop-grow-multiplier: 2.5 # 作物生长倍率最高
+    message: "小满小满（5月21日），麦粒渐满，作物生长最快！"
+
+  # 芒种（夏季第3个节气，公历6月6日）
+  mangzhong:
+    crop-ripe-speed: 1.8 # 作物成熟速度提升
+    message: "芒种忙种（6月6日），作物成熟加速，抓紧收割！"
+
+  # 夏至（夏季第4个节气，公历6月21日）
+  xiazhi:
+    day-length-longer: true # 白天延长（白天12分钟，黑夜8分钟）
+    heat-effect: true # 高温效果（玩家持续掉少量饥饿值）
+    message: "夏至昼最长（6月21日），暑气最盛，注意防暑！"
+
+  # 小暑（夏季第5个节气，公历7月7日）
+  xiaoshu:
+    temperature: 38   # 温度达到峰值
+    thunder-chance: 15 # 雷暴概率最高
+    message: "小暑大暑（7月7日），上蒸下煮，雷暴频发！"
+
+  # 大暑（夏季第6个节气，公历7月23日）
+  dashu:
+    heat-effect: true
+    crop-grow-multiplier: 2.0 # 生长倍率略有下降
+    message: "大暑至（7月23日），暑气难耐，作物生长放缓！"
+
+  # 立秋（秋季第1个节气，公历8月8日）
+  liqiu:
+    temperature: 25   # 温度下降
+    leaf-decay-speed: 1.2 # 树叶开始枯萎
+    message: "立秋已至（8月8日），暑气渐消，树叶开始飘落！"
+
+  # 处暑（秋季第2个节气，公历8月23日）
+  chushu:
+    temperature: 22   # 温度继续下降
+    rain-chance: 25   # 降雨概率降低
+    message: "处暑出暑（8月23日），天气转凉，暑气消散！"
+
+  # 白露（秋季第3个节气，公历9月8日）
+  bailu:
+    particle:
+      type: WATER_DROP # 水滴粒子（模拟白露）
+      density: 0.6
+    message: "白露凝霜（9月8日），天气转寒，注意保暖！"
+
+  # 秋分（秋季第4个节气，公历9月23日）
+  qiufen:
+    day-night-equal: true # 昼夜等长
+    leaf-decay-speed: 1.8 # 树叶枯萎加速
+    message: "秋分昼夜等长（9月23日），秋意渐浓，树叶纷飞！"
+
+  # 寒露（秋季第5个节气，公历10月8日）
+  hanlu:
+    temperature: 12   # 温度大幅下降
+    particle:
+      type: WHITE     # 白色粒子（模拟寒霜）
+    message: "寒露至（10月8日），寒霜生，天气转冷！"
+
+  # 霜降（秋季第6个节气，公历10月24日）
+  shuangjiang:
+    snow-form-chance: 20 # 少量降雪概率
+    grass-color: YELLOW # 草方块变黄
+    message: "霜降降临（10月24日），寒霜遍野，偶有降雪！"
+
+  # 立冬（冬季第1个节气，公历11月8日）
+  lidong:
+    temperature: 5    # 温度降至0℃以上
+    ice-form: false   # 暂不结冰
+    message: "立冬已至（11月8日），寒意渐生，准备过冬！"
+
+  # 小雪（冬季第2个节气，公历11月22日）
+  xiaoxue:
+    snow-form-chance: 40 # 降雪概率提升
+    particle:
+      type: WHITE     # 雪花粒子
+      density: 0.6
+    message: "小雪纷飞（11月22日），寒意渐浓，开始降雪！"
+
+  # 大雪（冬季第3个节气，公历12月7日）
+  daxue:
+    snow-form-chance: 70 # 降雪概率大幅提升
+    ice-form: true    # 水方块开始结冰
+    message: "大雪纷飞（12月7日），天寒地冻，水方块结冰！"
+
+  # 冬至（冬季第4个节气，公历12月22日）
+  dongzhi:
+    day-length-shorter: true # 黑夜延长（黑夜12分钟，白天8分钟）
+    temperature: -8   # 温度降至最低
+    message: "冬至昼最短（12月22日），夜最长，天寒地冻！"
+
+  # 小寒（冬季第5个节气，公历1月5日）
+  xiaohan:
+    snow-form-chance: 80 # 降雪概率极高
+    ice-form: true
+    message: "小寒料峭（1月5日），大雪纷飞，寒意刺骨！"
+
+  # 大寒（冬季第6个节气，公历1月20日）
+  dahhan:
+    snow-form-chance: 90 # 降雪概率拉满
+    temperature: -10  # 温度最低
+    message: "大寒至（1月20日），天寒地冻，一年最冷之时！"
+
+# ==============================================
+# 5. 消息配置（季节/节气切换的提示消息）
+# ==============================================
+messages:
+  # 季节切换消息（广播）
+  season-change: "&a[LISeasons] 季节已切换为 &6%season% &a（当前节气：&b%solar_term%&a，公历：&b%date%&a）" # 新增公历日期显示
+  # 节气切换消息（广播）
+  solar-term-change: "&b[LISeasons] 节气更新：&6%solar_term% &b（公历：&b%date%&b）%message%" # 新增公历日期显示
+  # 玩家加入时的提示消息（仅玩家可见）
+  player-join: "&7[LISeasons] 当前季节：&6%season% &7当前节气：&b%solar_term% &7（公历：&b%date%&7）" # 新增公历日期显示
+  # 指令提示消息
+  command-help: "&a/LISeasons 指令帮助：\n&6/seasons &7- 查看当前季节/节气及公历日期\n&6/seasons set <季节> &7- 手动切换季节（spring/summer/autumn/winter）\n&6/seasons next &7- 跳到下一个节气\n&6/seasons reload &7- 重载插件配置\n&6/seasons term <节气名> &7- 查询对应节气的公历日期" # 新增节气日期查询指令
+  # 权限不足提示
+  no-permission: "&c[LISeasons] 权限不足，无法执行此指令！"
+  # 季节不存在提示
+  season-not-exist: "&c[LISeasons] 不存在该季节，请输入正确的季节名称（spring/summer/autumn/winter）！"
+  # 配置重载成功提示
+  reload-success: "&a[LISeasons] 配置重载成功！"
+  # 是否广播消息（true=全服广播，false=仅管理员可见）
+  broadcast: true
+  # 消息前缀（可自定义）
+  prefix: "&a[LISeasons] "
+  # 节气日期查询提示（新增）
+  term-date: "&a[LISeasons] &6%solar_term% &a的公历日期为：&b%date%"
+  # 节气不存在提示（新增）
+  term-not-exist: "&c[LISeasons] 不存在该节气，请输入正确的节气名称！"
+
+# ==============================================
+# 6. 指令与权限配置
+# ==============================================
+commands:
+  # 主指令（可自定义，默认seasons）
+  main-command: "seasons"
+  # 子指令配置
+  sub-commands:
+    - name: "help"       # 帮助指令
+      permission: "liseasons.help" # 权限
+      description: "查看指令帮助"
+    - name: "set"        # 切换季节指令
+      permission: "liseasons.admin" # 管理员权限
+      description: "手动切换季节"
+    - name: "next"       # 下一个节气指令
+      permission: "liseasons.admin"
+      description: "跳到下一个节气"
+    - name: "reload"     # 重载配置指令
+      permission: "liseasons.admin"
+      description: "重载插件配置"
+    - name: "term"       # 节气日期查询指令（新增）
+      permission: "liseasons.player" # 普通玩家可使用
+      description: "查询指定节气的公历日期"
+
+permissions:
+  # 普通玩家权限（查看季节/节气）
+  liseasons.player:
+    description: "LISeasons 普通玩家权限"
+    default: true # 默认所有玩家拥有
+  # 管理员权限（所有操作）
+  liseasons.admin:
+    description: "LISeasons 管理员权限"
+    default: op # 默认仅OP拥有
+    children:
+      - liseasons.help # 包含普通玩家权限
+  # 帮助指令权限
+  liseasons.help:
+    description: "查看LISeasons指令帮助"
+    default: true
+
+# ==============================================
+# 7. 性能优化配置（避免插件占用过多服务器资源）
+# ==============================================
+performance:
+  # 季节/节气检查频率（单位：tick，20tick=1秒，默认1200tick=1分钟）
+  check-interval: 1200
+  # 粒子生成范围（单位：方块，默认50方块，超出范围不生成粒子）
+  particle-range: 50
+  # 是否启用异步任务（true=启用，减少主线程压力，推荐true）
+  async-task: true
+  # 作物生长检查频率（单位：tick，默认300tick=15秒）
+  crop-check-interval: 300
+  # 天气检查频率（单位：tick，默认600tick=30秒）
+  weather-check-interval: 600
+  # 公历日期校验频率（单位：tick，默认86400tick=12小时，无需频繁校验）
+  date-check-interval: 86400
+3.2 插件清单 plugin.yml（必备，用于服务器识别插件）
+name: LISeasons
+version: 1.0.0
+main: com.liseasons.LISeasons
+api-version: 1.18
+authors: [你的名字/ID]
+description: 一款实现四季切换与24节气联动的Minecraft插件，支持天气、作物、生物等场景适配，节气精准对应公历日期
+website: 你的网站/ Github地址（可选）
+prefix: LISeasons
+load: STARTUP
+depend: []
+softdepend: []
+
+# 指令配置（与config.yml中的指令对应，新增节气日期查询指令）
+commands:
+  seasons:
+    description: LISeasons 季节+24节气核心指令，支持查询节气公历日期
+    usage: /<command> [help/set/next/reload/term]
+    permission: liseasons.player
+    permission-message: §c[LISeasons] 权限不足！
+
+# 权限配置（与config.yml中的权限对应）
+permissions:
+  liseasons.player:
+    description: 普通玩家权限（查看季节/节气、查询节气日期）
+    default: true
+  liseasons.admin:
+    description: 管理员权限（所有操作）
+    default: op
+    children:
+      - liseasons.help
+  liseasons.help:
+    description: 查看LISeasons指令帮助
+    default: true
+3.3 消息配置文件 messages.yml（单独拆分，便于多语言扩展）
+# LISeasons 消息配置文件
+# 所有消息支持颜色代码（&+颜色字母，如&a=绿色，&6=金色）
+prefix: "&a[LISeasons] "
+
+# 季节名称（可自定义显示名称）
+season-names:
+  spring: "春季"
+  summer: "夏季"
+  autumn: "秋季"
+  winter: "冬季"
+
+# 节气名称（可自定义显示名称）
+solar-term-names:
+  lichun: "立春"
+  yushui: "雨水"
+  jingzhe: "惊蛰"
+  chunfen: "春分"
+  qingming: "清明"
+  guyu: "谷雨"
+  lixia: "立夏"
+  xiaoman: "小满"
+  mangzhong: "芒种"
+  xiazhi: "夏至"
+  xiaoshu: "小暑"
+  dashu: "大暑"
+  liqiu: "立秋"
+  chushu: "处暑"
+  bailu: "白露"
+  qiufen: "秋分"
+  hanlu: "寒露"
+  shuangjiang: "霜降"
+  
+需要接入的季节接口
+创建一个实现SeasonProvider的类，然后在插件启用上注册它
+
+
+package net.momirealms.customcrops.api.example;
+
+import net.momirealms.customcrops.api.core.world.Season;
+import net.momirealms.customcrops.api.integration.SeasonProvider;
+import org.bukkit.World;
+import org.jetbrains.annotations.NotNull;
+
+public class MySeasonProvider implements SeasonProvider {
+    
+    @Override
+    public @NotNull Season getSeason(@NotNull World world) {
+        return ...;
+    }
+
+    @Override
+    public String identifier() {
+        return "MySeasonPlugin";
+    }
+}
+
+package net.momirealms.customcrops.api.example;
+
+import net.momirealms.customcrops.api.BukkitCustomCropsPlugin;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public class MyPlugin extends JavaPlugin {
+
+    @Override
+    public void onEnable() {
+        register();
+    }
+
+    public void register() {
+        BukkitCustomCropsPlugin.getInstance().getIntegrationManager().registerSeasonProvider(new MySeasonProvider());
+    }
+}

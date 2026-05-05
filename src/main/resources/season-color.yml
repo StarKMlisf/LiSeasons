@@ -1,0 +1,98 @@
+# LISeasons 季节色调配置
+# 当前实现参考 SeasonCore：直接分批调整玩家附近已加载区块的 biome，让客户端在线刷新草地、树叶、水面和天空色调。
+# 不再依赖 ProtocolLib 或 PacketEvents，也不会向客户端发送未识别协议包。
+
+# 是否启用季节色调。true=启用，false=关闭。
+enable: true
+
+# 色调服务刷新间隔，单位 tick。20 tick = 1 秒。建议 20-100。
+interval-ticks: 40
+
+# 兼容旧配置字段，当前动态 biome 染色不读取这个半径。
+radius: 8
+
+# 兼容旧配置字段，旧版群系映射已停用。
+seasons: {}
+
+biome-spoof:
+  # 是否启用 SeasonCore 风格动态 biome 染色。
+  enable: true
+  # 玩家周围处理半径，单位区块。建议 6-10。
+  radius-chunks: 8
+  # 每次刷新最多处理多少个区块。建议 4-12，越大变化越快但压力越高。
+  budget-chunks-per-tick: 8
+  # 区块内 X/Z 采样步长。4 表示每 4 格设置一次 biome。
+  step-xz: 4
+  # 区块内 Y 采样步长。4 表示每 4 格高度设置一次 biome。
+  step-y: 4
+  # 每个季节伪装成的目标 biome。
+  # 秋季使用 windswept_savanna，草地和树叶会明显偏黄。
+  # 冬季使用 snowy_plains，草地和树叶会明显偏白。
+  seasons:
+    spring: "flower_forest"
+    summer: "plains"
+    autumn: "windswept_savanna"
+    winter: "snowy_plains"
+
+# 保留给后续注册表色调模式的配置。当前默认逻辑不读取这里。
+biome-visuals:
+  plains_meadows:
+    biomes:
+      - PLAINS
+      - SUNFLOWER_PLAINS
+      - MEADOW
+      - GROVE
+      - CHERRY_GROVE
+    seasons:
+      spring:
+        sky: "42C6D2"
+        fog: "83C9DE"
+        water: "09A8CD"
+        waterFog: "09A8CD"
+        grass: "32CD32"
+        tree: "54B948"
+      summer:
+        sky: "1E90FF"
+        fog: "ADD8E6"
+        water: "6DD8DB"
+        waterFog: "6DD8DB"
+        grass: "16A616"
+        tree: "228B22"
+      autumn:
+        sky: "81B6DD"
+        fog: "B2BABC"
+        water: "3B9AC9"
+        waterFog: "3B9AC9"
+        grass: "DDCF71"
+        tree: "CFA241"
+      winter:
+        sky: "B0C4DE"
+        fog: "F8F8FF"
+        water: "4682B4"
+        waterFog: "B0C4DE"
+        grass: "F2F6F8"
+        tree: "DDE6EA"
+
+  forests:
+    biomes:
+      - FOREST
+      - BIRCH_FOREST
+      - DARK_FOREST
+      - FLOWER_FOREST
+      - OLD_GROWTH_BIRCH_FOREST
+      - WINDSWEPT_FOREST
+    seasons:
+      autumn:
+        sky: "81B6DD"
+        fog: "B2BABC"
+        water: "3B9AC9"
+        waterFog: "3B9AC9"
+        grass: "DAA520"
+        tree: "ED7621"
+      winter:
+        sky: "B0C4DE"
+        fog: "F8F8FF"
+        water: "4682B4"
+        waterFog: "B0C4DE"
+        grass: "FFFFFF"
+        tree: "D6DEE2"

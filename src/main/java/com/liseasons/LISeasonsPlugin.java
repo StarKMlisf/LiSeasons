@@ -1,0 +1,210 @@
+package com.liseasons;
+
+import com.liseasons.calendar.CalendarMenu;
+import com.liseasons.calendar.CalendarMenuListener;
+import com.liseasons.climate.TemperatureHudService;
+import com.liseasons.climate.TemperatureMonitorService;
+import com.liseasons.climate.TemperatureNoticeService;
+import com.liseasons.climate.TemperatureService;
+import com.liseasons.command.SeasonCommand;
+import com.liseasons.config.ConfigManager;
+import com.liseasons.config.PluginConfig;
+import com.liseasons.integration.customcrops.CustomCropsHook;
+import com.liseasons.integration.placeholderapi.PlaceholderApiHook;
+import com.liseasons.listener.CropGrowListener;
+import com.liseasons.listener.PlayerJoinListener;
+import com.liseasons.listener.SeasonMobListener;
+import com.liseasons.listener.WeatherLinkListener;
+import com.liseasons.scheduler.ScheduledHandle;
+import com.liseasons.scheduler.SchedulerAdapter;
+import com.liseasons.scheduler.SchedulerFactory;
+import com.liseasons.season.RealTimeClockService;
+import com.liseasons.season.SeasonManager;
+import com.liseasons.season.SeasonWorldService;
+import com.liseasons.visual.SeasonBiomeColorService;
+import com.liseasons.visual.SeasonVisualManager;
+import java.io.File;
+import java.util.Objects;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public final class LISeasonsPlugin extends JavaPlugin {
+    private ConfigManager configManager;
+    private MessageManager messageManager;
+    private SeasonManager seasonManager;
+    private TemperatureService temperatureService;
+    private TemperatureHudService temperatureHudService;
+    private TemperatureNoticeService temperatureNoticeService;
+    private TemperatureMonitorService temperatureMonitorService;
+    private CalendarMenu calendarMenu;
+    private SeasonVisualManager seasonVisualManager;
+    private RealTimeClockService realTimeClockService;
+    private SeasonWorldService seasonWorldService;
+    private SeasonBiomeColorService biomeColorService;
+    private SchedulerAdapter schedulerAdapter;
+    private ScheduledHandle seasonTickerHandle;
+    private ScheduledHandle realTimeTickerHandle;
+    private ScheduledHandle temperatureTickerHandle;
+    private ScheduledHandle visualTickerHandle;
+    private ScheduledHandle seasonWorldTickerHandle;
+    private PluginConfig liConfig;
+
+    @Override
+    public void onEnable() {
+        saveDefaultConfig();
+        saveResourceIfMissing("messages.yml");
+        saveResourceIfMissing("temperature.yml");
+        saveResourceIfMissing("season-color.yml");
+
+        this.messageManager = new MessageManager(this);
+        this.configManager = new ConfigManager(this);
+        this.liConfig = this.configManager.getConfig();
+        this.schedulerAdapter = SchedulerFactory.create(this);
+        this.seasonManager = new SeasonManager(this, this.liConfig);
+        this.temperatureService = new TemperatureService(this);
+        this.temperatureHudService = new TemperatureHudService(this);
+        this.temperatureNoticeService = new TemperatureNoticeService(this);
+        this.temperatureMonitorService = new TemperatureMonitorService(this);
+        this.calendarMenu = new CalendarMenu(this);
+        this.seasonVisualManager = new SeasonVisualManager(this);
+        this.realTimeClockService = new RealTimeClockService(this);
+        this.seasonWorldService = new SeasonWorldService(this);
+        this.biomeColorService = new SeasonBiomeColorService(this);
+
+        registerCommands();
+        registerListeners();
+        this.seasonManager.tickAllWorlds();
+        this.realTimeClockService.tickWorlds();
+        this.biomeColorService.start();
+        CustomCropsHook.tryRegister(this);
+        PlaceholderApiHook.tryRegister(this);
+        startTickers();
+
+        getLogger().info("LISeasons 已启用，当前版本 " + getPluginMeta().getVersion());
+    }
+
+    @Override
+    public void onDisable() {
+        if (this.biomeColorService != null) {
+            this.biomeColorService.stop();
+        }
+        stopTickers();
+    }
+
+    public void reloadPlugin() {
+        if (this.biomeColorService != null) {
+            this.biomeColorService.stop();
+        }
+        this.liConfig = this.configManager.reload();
+        this.messageManager.reload();
+        this.seasonManager.reload(this.liConfig);
+        stopTickers();
+        startTickers();
+        if (this.biomeColorService != null) {
+            this.biomeColorService.start();
+        }
+        CustomCropsHook.tryRegister(this);
+        PlaceholderApiHook.tryRegister(this);
+    }
+
+    public void reloadMessagesConfig() {
+        if (this.messageManager != null) {
+            this.messageManager.reload();
+        }
+    }
+
+    public PluginConfig getLiConfig() {
+        return this.liConfig;
+    }
+
+    public MessageManager getMessageManager() {
+        return this.messageManager;
+    }
+
+    public SeasonManager getSeasonManager() {
+        return this.seasonManager;
+    }
+
+    public TemperatureService getTemperatureService() {
+        return this.temperatureService;
+    }
+
+    public TemperatureHudService getTemperatureHudService() {
+        return this.temperatureHudService;
+    }
+
+    public TemperatureNoticeService getTemperatureNoticeService() {
+        return this.temperatureNoticeService;
+    }
+
+    public SeasonBiomeColorService getBiomeColorService() {
+        return this.biomeColorService;
+    }
+
+    public SeasonWorldService getSeasonWorldService() {
+        return this.seasonWorldService;
+    }
+
+    public CalendarMenu getCalendarMenu() {
+        return this.calendarMenu;
+    }
+
+    private void registerCommands() {
+        PluginCommand command = Objects.requireNonNull(getCommand("seasons"), "seasons 指令未在 plugin.yml 注册");
+        SeasonCommand executor = new SeasonCommand(this);
+        command.setExecutor(executor);
+        command.setTabCompleter(executor);
+    }
+
+    private void registerListeners() {
+        getServer().getPluginManager().registerEvents(new CalendarMenuListener(this), this);
+        getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
+        getServer().getPluginManager().registerEvents(new CropGrowListener(this), this);
+        getServer().getPluginManager().registerEvents(new WeatherLinkListener(this), this);
+        getServer().getPluginManager().registerEvents(new SeasonMobListener(this), this);
+    }
+
+    private void startTickers() {
+        long seasonPeriod = Math.max(20L, this.liConfig.refreshIntervalTicks());
+        long realTimePeriod = this.liConfig.realTimeSyncIntervalTicks();
+        long temperaturePeriod = this.liConfig.temperatureConfig().updateIntervalTicks();
+        long visualPeriod = this.liConfig.visualEffectsConfig().intervalTicks();
+        long seasonWorldPeriod = this.liConfig.seasonWorldRulesConfig().waterCycleConfig().intervalTicks();
+        this.seasonTickerHandle = this.schedulerAdapter.runAtFixedRate(this.seasonManager::tickAllWorlds, seasonPeriod, seasonPeriod);
+        this.realTimeTickerHandle = this.schedulerAdapter.runAtFixedRate(this.realTimeClockService::tickWorlds, realTimePeriod, realTimePeriod);
+        this.temperatureTickerHandle = this.schedulerAdapter.runAtFixedRate(this.temperatureMonitorService::tickPlayers, temperaturePeriod, temperaturePeriod);
+        this.visualTickerHandle = this.schedulerAdapter.runAtFixedRate(this.seasonVisualManager::tickPlayers, visualPeriod, visualPeriod);
+        this.seasonWorldTickerHandle = this.schedulerAdapter.runAtFixedRate(this.seasonWorldService::tickPlayers, seasonWorldPeriod, seasonWorldPeriod);
+    }
+
+    private void stopTickers() {
+        if (this.seasonTickerHandle != null) {
+            this.seasonTickerHandle.cancel();
+            this.seasonTickerHandle = null;
+        }
+        if (this.temperatureTickerHandle != null) {
+            this.temperatureTickerHandle.cancel();
+            this.temperatureTickerHandle = null;
+        }
+        if (this.realTimeTickerHandle != null) {
+            this.realTimeTickerHandle.cancel();
+            this.realTimeTickerHandle = null;
+        }
+        if (this.visualTickerHandle != null) {
+            this.visualTickerHandle.cancel();
+            this.visualTickerHandle = null;
+        }
+        if (this.seasonWorldTickerHandle != null) {
+            this.seasonWorldTickerHandle.cancel();
+            this.seasonWorldTickerHandle = null;
+        }
+    }
+
+    private void saveResourceIfMissing(String resourcePath) {
+        File file = new File(getDataFolder(), resourcePath);
+        if (file.exists()) {
+            return;
+        }
+        saveResource(resourcePath, false);
+    }
+}
