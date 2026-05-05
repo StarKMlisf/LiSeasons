@@ -6,6 +6,7 @@ import com.liseasons.util.PlatformUtil;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -23,6 +24,7 @@ public final class SeasonWorldService {
     private final LISeasonsPlugin plugin;
     private final Deque<ChunkMeltTask> transitionMeltQueue = new ArrayDeque<>();
     private final Set<Long> queuedChunks = ConcurrentHashMap.newKeySet();
+    private final Map<Long, Long> lastMeltScanTicks = new ConcurrentHashMap<>();
 
     public SeasonWorldService(LISeasonsPlugin plugin) {
         this.plugin = plugin;
@@ -33,6 +35,7 @@ public final class SeasonWorldService {
         if (!config.enabled()) {
             return;
         }
+        queueNonWinterLoadedChunks(config);
         processTransitionMeltQueue(config);
         for (Player player : this.plugin.getServer().getOnlinePlayers()) {
             if (!player.isOnline() || player.isDead()) {
@@ -48,29 +51,51 @@ public final class SeasonWorldService {
             return;
         }
 
-        int radius = config.transitionMeltRadiusChunks();
         int queued = 0;
-        for (Player player : world.getPlayers()) {
-            int centerX = player.getLocation().getBlockX() >> 4;
-            int centerZ = player.getLocation().getBlockZ() >> 4;
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    int chunkX = centerX + dx;
-                    int chunkZ = centerZ + dz;
-                    if (!world.isChunkLoaded(chunkX, chunkZ)) {
-                        continue;
-                    }
-                    long key = chunkKey(world, chunkX, chunkZ);
-                    if (this.queuedChunks.add(key)) {
-                        this.transitionMeltQueue.addLast(new ChunkMeltTask(world, chunkX, chunkZ, key));
-                        queued++;
-                    }
-                }
-            }
+        for (org.bukkit.Chunk chunk : world.getLoadedChunks()) {
+            queued += queueChunk(world, chunk.getX(), chunk.getZ(), world.getFullTime(), 0L);
         }
         if (queued > 0) {
             this.plugin.getLogger().info("非冬季融雪任务已加入队列，待处理区块 " + queued + " 个。");
         }
+    }
+
+    private void queueNonWinterLoadedChunks(SeasonWaterCycleConfig config) {
+        long queueCooldownTicks = Math.max(200L, config.intervalTicks() * 10L);
+        for (World world : this.plugin.getServer().getWorlds()) {
+            if (world.getEnvironment() != World.Environment.NORMAL) {
+                continue;
+            }
+            SeasonState state = this.plugin.getSeasonManager().getState(world);
+            if (state == null || state.season() == Season.WINTER) {
+                continue;
+            }
+            long currentTick = world.getFullTime();
+            int queuedThisWorld = 0;
+            for (org.bukkit.Chunk chunk : world.getLoadedChunks()) {
+                queuedThisWorld += queueChunk(world, chunk.getX(), chunk.getZ(), currentTick, queueCooldownTicks);
+                if (queuedThisWorld >= Math.max(1, config.transitionMeltRadiusChunks() * 2)) {
+                    break;
+                }
+            }
+        }
+    }
+
+    private int queueChunk(World world, int chunkX, int chunkZ, long currentTick, long queueCooldownTicks) {
+        if (!world.isChunkLoaded(chunkX, chunkZ)) {
+            return 0;
+        }
+        long key = chunkKey(world, chunkX, chunkZ);
+        long lastQueuedTick = this.lastMeltScanTicks.getOrDefault(key, Long.MIN_VALUE);
+        if (lastQueuedTick != Long.MIN_VALUE && queueCooldownTicks > 0L && currentTick - lastQueuedTick < queueCooldownTicks) {
+            return 0;
+        }
+        if (!this.queuedChunks.add(key)) {
+            return 0;
+        }
+        this.lastMeltScanTicks.put(key, currentTick);
+        this.transitionMeltQueue.addLast(new ChunkMeltTask(world, chunkX, chunkZ, key));
+        return 1;
     }
 
     private void processNearPlayer(Player player, SeasonWaterCycleConfig config) {
@@ -173,6 +198,11 @@ public final class SeasonWorldService {
                 meltBlock(block);
                 return;
             }
+            if (block.getBlockData() instanceof Snowable snowable && snowable.isSnowy()) {
+                snowable.setSnowy(false);
+                block.setBlockData(snowable, true);
+                return;
+            }
         }
     }
 
@@ -236,15 +266,20 @@ public final class SeasonWorldService {
             int z = baseZ + task.localZ();
             int highestY = world.getHighestBlockYAt(x, z) + 3;
             int maxY = Math.min(world.getMaxHeight() - 1, highestY);
-            int minY = Math.max(world.getMinHeight(), highestY - 8);
+            int minY = Math.max(world.getMinHeight(), highestY - 32);
 
             for (int y = maxY; y >= minY; y--) {
                 if (isExemptBiome(world.getBiome(x, y, z), config)) {
                     break;
                 }
                 Block block = world.getBlockAt(x, y, z);
-                meltBlock(block);
-                spent++;
+                if (meltBlock(block)) {
+                    spent++;
+                } else if (block.getBlockData() instanceof Snowable snowable && snowable.isSnowy()) {
+                    snowable.setSnowy(false);
+                    block.setBlockData(snowable, true);
+                    spent++;
+                }
                 if (spent >= budget) {
                     break;
                 }
@@ -254,19 +289,22 @@ public final class SeasonWorldService {
         return spent;
     }
 
-    private void meltBlock(Block block) {
+    private boolean meltBlock(Block block) {
         Material type = block.getType();
         if (type == Material.ICE || type == Material.FROSTED_ICE) {
             if (block.getRelative(BlockFace.UP).getType().isAir()) {
                 block.setType(Material.WATER, true);
                 updateSnowyBelow(block);
+                return true;
             }
-            return;
+            return false;
         }
         if (type == Material.SNOW || type == Material.SNOW_BLOCK || type == Material.POWDER_SNOW) {
             block.setType(Material.AIR, true);
             updateSnowyBelow(block);
+            return true;
         }
+        return false;
     }
 
     private void updateSnowyBelow(Block block) {
