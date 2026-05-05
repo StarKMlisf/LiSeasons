@@ -35,18 +35,13 @@ public final class SeasonWeatherService {
     }
 
     private void applyWeather(World world, Season season, SeasonEffectConfig effectConfig) {
-        boolean shouldRain;
-        boolean shouldThunder;
-
         if (season == Season.WINTER) {
-            // Minecraft 的“下雪”依赖 storm=true；如果冬天关闭 storm，雨和雪都会消失。
-            shouldRain = true;
-            // 冬天默认关闭雷暴，避免暴雪天气里出现雷暴。
-            shouldThunder = false;
-        } else {
-            shouldRain = rollChance(effectConfig.rainChance());
-            shouldThunder = shouldRain && rollChance(effectConfig.thunderChance());
+            // 冬季不强制切换天气，让 /weather 和原版天气系统自行控制。
+            return;
         }
+
+        boolean shouldRain = rollChance(effectConfig.rainChance());
+        boolean shouldThunder = shouldRain && rollChance(effectConfig.thunderChance());
 
         world.setStorm(shouldRain);
         world.setThundering(shouldThunder);

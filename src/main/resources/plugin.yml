@@ -1,5 +1,5 @@
 name: LISeasons
-version: 1.0
+version: 1.0.4
 main: com.liseasons.LISeasonsPlugin
 api-version: '1.21'
 folia-supported: true

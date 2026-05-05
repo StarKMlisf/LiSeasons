@@ -9,6 +9,7 @@ import java.time.LocalTime;
 
 public final class RealTimeClockService {
     private final LISeasonsPlugin plugin;
+    private boolean daylightCycleRestored;
 
     public RealTimeClockService(LISeasonsPlugin plugin) {
         this.plugin = plugin;
@@ -16,9 +17,14 @@ public final class RealTimeClockService {
 
     public void tickWorlds() {
         if (!this.plugin.getLiConfig().syncRealTime()) {
+            if (this.daylightCycleRestored) {
+                return;
+            }
             restoreDaylightCycle();
+            this.daylightCycleRestored = true;
             return;
         }
+        this.daylightCycleRestored = false;
         syncAllWorlds();
     }
 

@@ -171,7 +171,7 @@ season-world-rules:
     # 冬季露天静水结冰概率
     winter-freeze-chance-percent: 35
     # 春季露天冰雪融化概率
-    spring-melt-chance-percent: 30
+    spring-melt-chance-percent: 60
     # 季节切换到春季时，玩家周围加入融雪队列的区块半径
     transition-melt-radius-chunks: 6
     # 春季过渡融雪每次最多处理的方块数，越大融化越快但压力越高
