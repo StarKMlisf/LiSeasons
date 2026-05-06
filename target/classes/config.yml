@@ -122,6 +122,9 @@ visual-effects:
     radius: 10
     # 每名玩家每次刷新最多替换多少个叶子方块。建议 12-48
     budget-per-player: 24
+  spring-cherry-leaf:
+    # 春季是否将玩家视角的橡树树叶虚拟显示为樱花树叶
+    enable: true
   tree-snow:
     # 冬季树枝落雪特效
     enable: true

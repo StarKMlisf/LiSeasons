@@ -26,9 +26,7 @@ public final class SeasonWeatherService {
 
         Runnable updateTask = () -> applyWeather(world, state.season(), effectConfig);
         if (PlatformUtil.isFolia(this.plugin)) {
-            int chunkX = world.getSpawnLocation().getBlockX() >> 4;
-            int chunkZ = world.getSpawnLocation().getBlockZ() >> 4;
-            this.plugin.getServer().getRegionScheduler().execute(this.plugin, world, chunkX, chunkZ, updateTask);
+            this.plugin.getServer().getGlobalRegionScheduler().execute(this.plugin, updateTask);
             return;
         }
         updateTask.run();

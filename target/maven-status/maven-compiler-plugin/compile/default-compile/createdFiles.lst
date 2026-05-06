@@ -73,3 +73,4 @@ com\liseasons\scheduler\SchedulerFactory.class
 com\liseasons\calendar\CalendarMenuListener.class
 com\liseasons\listener\SeasonMobListener.class
 com\liseasons\scheduler\ScheduledHandle.class
+com\liseasons\visual\SpringCherryLeafPacketListener.class

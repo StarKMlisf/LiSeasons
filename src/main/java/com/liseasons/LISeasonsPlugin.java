@@ -23,6 +23,9 @@ import com.liseasons.season.SeasonManager;
 import com.liseasons.season.SeasonWorldService;
 import com.liseasons.visual.SeasonBiomeColorService;
 import com.liseasons.visual.SeasonVisualManager;
+import com.liseasons.visual.SpringCherryLeafPacketListener;
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import java.io.File;
 import java.util.Objects;
 import org.bukkit.command.PluginCommand;
@@ -41,6 +44,7 @@ public final class LISeasonsPlugin extends JavaPlugin {
     private RealTimeClockService realTimeClockService;
     private SeasonWorldService seasonWorldService;
     private SeasonBiomeColorService biomeColorService;
+    private SpringCherryLeafPacketListener cherryLeafPacketListener;
     private SchedulerAdapter schedulerAdapter;
     private ScheduledHandle seasonTickerHandle;
     private ScheduledHandle realTimeTickerHandle;
@@ -70,9 +74,11 @@ public final class LISeasonsPlugin extends JavaPlugin {
         this.realTimeClockService = new RealTimeClockService(this);
         this.seasonWorldService = new SeasonWorldService(this);
         this.biomeColorService = new SeasonBiomeColorService(this);
+        this.cherryLeafPacketListener = new SpringCherryLeafPacketListener(this);
 
         registerCommands();
         registerListeners();
+        registerPacketListeners();
         this.seasonManager.tickAllWorlds();
         this.realTimeClockService.tickWorlds();
         this.biomeColorService.start();
@@ -163,6 +169,10 @@ public final class LISeasonsPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CropGrowListener(this), this);
         getServer().getPluginManager().registerEvents(new WeatherLinkListener(this), this);
         getServer().getPluginManager().registerEvents(new SeasonMobListener(this), this);
+    }
+
+    private void registerPacketListeners() {
+        PacketEvents.getAPI().getEventManager().registerListener(this.cherryLeafPacketListener, PacketListenerPriority.NORMAL);
     }
 
     private void startTickers() {

@@ -103,6 +103,7 @@ public final class ConfigManager {
                 this.plugin.getConfig().getBoolean("visual-effects.autumn-leaf-color.enable", true),
                 this.plugin.getConfig().getInt("visual-effects.autumn-leaf-color.radius", 10),
                 this.plugin.getConfig().getInt("visual-effects.autumn-leaf-color.budget-per-player", 24),
+                this.plugin.getConfig().getBoolean("visual-effects.spring-cherry-leaf.enable", true),
                 this.plugin.getConfig().getBoolean("visual-effects.tree-snow.enable", true),
                 this.plugin.getConfig().getBoolean("visual-effects.apple-drop.enable", true),
                 this.plugin.getConfig().getInt("visual-effects.apple-drop.chance-percent", 8)

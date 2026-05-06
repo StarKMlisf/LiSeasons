@@ -11,6 +11,7 @@ public record VisualEffectsConfig(
         boolean autumnLeafColorEnabled,
         int autumnLeafColorRadius,
         int autumnLeafColorBudget,
+        boolean springCherryLeafEnabled,
         boolean treeSnowEnabled,
         boolean appleDropEnabled,
         int appleDropChancePercent
