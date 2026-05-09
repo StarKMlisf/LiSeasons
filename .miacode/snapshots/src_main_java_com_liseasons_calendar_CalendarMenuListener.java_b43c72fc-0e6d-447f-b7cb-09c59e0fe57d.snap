@@ -1,0 +1,76 @@
+package com.liseasons.calendar;
+
+import com.liseasons.LISeasonsPlugin;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+
+public final class CalendarMenuListener implements Listener {
+    private final LISeasonsPlugin plugin;
+
+    public CalendarMenuListener(LISeasonsPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getInventory().getHolder() instanceof CalendarMenuHolder holder)) {
+            return;
+        }
+        event.setCancelled(true);
+
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+
+        int slot = event.getRawSlot();
+        if (slot == 22 && holder.page() == CalendarPage.OVERVIEW) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.MONTH_TERMS, false);
+            return;
+        }
+        if (slot == 11 && holder.page() == CalendarPage.OVERVIEW) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.YEAR_TERMS, false);
+            return;
+        }
+        if (slot == 12 && holder.page() == CalendarPage.OVERVIEW) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.TEMPERATURE, false);
+            return;
+        }
+        if (slot == 48 && holder.page() != CalendarPage.OVERVIEW) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.OVERVIEW, false);
+            return;
+        }
+        if (slot == 49) {
+            player.closeInventory();
+            return;
+        }
+        if (slot == 50 && holder.page() != CalendarPage.MONTH_TERMS) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.MONTH_TERMS, false);
+            return;
+        }
+        if (slot == 51 && holder.page() != CalendarPage.YEAR_TERMS) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.YEAR_TERMS, false);
+            return;
+        }
+        if (slot == 52 && holder.page() != CalendarPage.TEMPERATURE) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.TEMPERATURE, false);
+            return;
+        }
+        if (slot == 45 && holder.page() != CalendarPage.SEASON_EVENTS) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.SEASON_EVENTS, false);
+            return;
+        }
+        if (slot == 46 && holder.page() != CalendarPage.FESTIVALS) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.FESTIVALS, false);
+            return;
+        }
+        if (slot == 47 && (holder.page() == CalendarPage.SEASON_EVENTS || holder.page() == CalendarPage.FESTIVALS)) {
+            this.plugin.getCalendarMenu().open(player, holder.page(), false, holder.pageIndex() - 1);
+            return;
+        }
+        if (slot == 53 && (holder.page() == CalendarPage.SEASON_EVENTS || holder.page() == CalendarPage.FESTIVALS)) {
+            this.plugin.getCalendarMenu().open(player, holder.page(), false, holder.pageIndex() + 1);
+        }
+    }
+}

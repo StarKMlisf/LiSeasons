@@ -1,0 +1,283 @@
+package com.liseasons.event;
+
+import java.util.Locale;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
+import org.bukkit.Registry;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.plugin.java.JavaPlugin;
+
+/**
+ * 季节事件效果执行器
+ * 负责执行各种季节事件效果
+ */
+public class SeasonEventEffectExecutor {
+    private final JavaPlugin plugin;
+
+    public SeasonEventEffectExecutor(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    /**
+     * 执行效果
+     * 效果格式: TYPE:param1:param2:...
+     * 
+     * 支持的效果类型:
+     * - PARTICLE:particleType:amount:offsetX:offsetY:offsetZ
+     * - POTION:effectType:amplifier:duration
+     * - SOUND:soundType:volume:pitch
+     * - MESSAGE:message
+     * - SCREEN_FREEZE:ticks
+     * - DAMAGE:amount
+     */
+    public void executeEffect(Player player, String effectId, SeasonEventContext context) {
+        if (effectId == null || effectId.isEmpty()) {
+            return;
+        }
+
+        String[] parts = effectId.split(":");
+        if (parts.length == 0) {
+            return;
+        }
+
+        String effectType = parts[0].toUpperCase(Locale.ROOT);
+
+        try {
+            switch (effectType) {
+                case "PARTICLE" -> executeParticleEffect(player, parts, context);
+                case "POTION" -> executePotionEffect(player, parts, context);
+                case "SOUND" -> executeSoundEffect(player, parts, context);
+                case "MESSAGE" -> executeMessageEffect(player, parts, context);
+                case "SCREEN_FREEZE" -> executeScreenFreezeEffect(player, parts, context);
+                case "DAMAGE" -> executeDamageEffect(player, parts, context);
+                case "HEAL" -> executeHealEffect(player, parts, context);
+                case "FIRE" -> executeFireEffect(player, parts, context);
+                default -> plugin.getLogger().warning("Unknown effect type: " + effectType);
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error executing effect " + effectId + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * 执行粒子效果
+     * 格式: PARTICLE:particleType:amount:offsetX:offsetY:offsetZ
+     */
+    private void executeParticleEffect(Player player, String[] parts, SeasonEventContext context) {
+        if (parts.length < 2) return;
+
+        try {
+            Particle particle = parseParticle(parts[1]);
+            if (particle == null) {
+                plugin.getLogger().warning("Invalid particle type: " + parts[1]);
+                return;
+            }
+            int amount = parts.length > 2 ? Integer.parseInt(parts[2]) : 10;
+            double offsetX = parts.length > 3 ? Double.parseDouble(parts[3]) : 0.5;
+            double offsetY = parts.length > 4 ? Double.parseDouble(parts[4]) : 0.5;
+            double offsetZ = parts.length > 5 ? Double.parseDouble(parts[5]) : 0.5;
+
+            player.getWorld().spawnParticle(
+                    particle,
+                    player.getLocation(),
+                    amount,
+                    offsetX, offsetY, offsetZ
+            );
+        } catch (NumberFormatException e) {
+            plugin.getLogger().warning("Invalid particle parameters: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 执行药水效果
+     * 格式: POTION:effectType:amplifier:duration
+     */
+    private void executePotionEffect(Player player, String[] parts, SeasonEventContext context) {
+        if (parts.length < 4) return;
+
+        try {
+            PotionEffectType effectType = parsePotionEffectType(parts[1]);
+            if (effectType == null) {
+                plugin.getLogger().warning("Invalid potion effect type: " + parts[1]);
+                return;
+            }
+
+            int amplifier = Integer.parseInt(parts[2]);
+            int duration = Integer.parseInt(parts[3]) * 20; // 转换为 ticks
+
+            player.addPotionEffect(new PotionEffect(effectType, duration, amplifier, false, false));
+        } catch (NumberFormatException e) {
+            plugin.getLogger().warning("Invalid potion parameters: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 执行声音效果
+     * 格式: SOUND:soundType:volume:pitch
+     */
+    private void executeSoundEffect(Player player, String[] parts, SeasonEventContext context) {
+        if (parts.length < 2) return;
+
+        try {
+            Sound sound = parseSound(parts[1]);
+            if (sound == null) {
+                plugin.getLogger().warning("Invalid sound type: " + parts[1]);
+                return;
+            }
+            float volume = parts.length > 2 ? Float.parseFloat(parts[2]) : 1.0f;
+            float pitch = parts.length > 3 ? Float.parseFloat(parts[3]) : 1.0f;
+
+            player.playSound(player.getLocation(), sound, volume, pitch);
+        } catch (NumberFormatException e) {
+            plugin.getLogger().warning("Invalid sound parameters: " + e.getMessage());
+        }
+    }
+
+    private Particle parseParticle(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = normalizeEnumName(value);
+        normalized = switch (normalized) {
+            case "RAIN" -> "FALLING_WATER";
+            case "SMOKE" -> "SMOKE";
+            default -> normalized;
+        };
+        try {
+            return Particle.valueOf(normalized);
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private PotionEffectType parsePotionEffectType(String value) {
+        NamespacedKey key = parseMinecraftKey(switch (normalizeEnumName(value)) {
+            case "SLOW", "SLOWNESS" -> "slowness";
+            case "FAST_DIGGING", "HASTE" -> "haste";
+            case "INCREASE_DAMAGE", "STRENGTH" -> "strength";
+            case "DAMAGE_RESISTANCE", "RESISTANCE" -> "resistance";
+            case "JUMP", "JUMP_BOOST" -> "jump_boost";
+            default -> value;
+        });
+        return key == null ? null : Registry.POTION_EFFECT_TYPE.get(key);
+    }
+
+    private Sound parseSound(String value) {
+        NamespacedKey key = parseMinecraftKey(value);
+        if (key != null) {
+            Sound sound = Registry.SOUNDS.get(key);
+            if (sound != null) {
+                return sound;
+            }
+        }
+        try {
+            return Sound.valueOf(normalizeEnumName(value));
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private NamespacedKey parseMinecraftKey(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
+        if (!normalized.contains(":")) {
+            normalized = normalized.replace('_', '.');
+            return NamespacedKey.minecraft(normalized);
+        }
+        return NamespacedKey.fromString(normalized);
+    }
+
+    private String normalizeEnumName(String value) {
+        return value == null ? "" : value.trim().toUpperCase(Locale.ROOT);
+    }
+
+    /**
+     * 执行消息效果
+     * 格式: MESSAGE:message
+     */
+    private void executeMessageEffect(Player player, String[] parts, SeasonEventContext context) {
+        if (parts.length < 2) return;
+
+        String message = String.join(":", java.util.Arrays.copyOfRange(parts, 1, parts.length));
+        // 替换占位符
+        message = message.replace("{season}", context.getSeasonName());
+        message = message.replace("{term}", context.getSolarTermName());
+        message = message.replace("{temperature}", String.format("%.1f", context.getBodyTemperature()));
+        message = message.replace("{air_temperature}", String.format("%.1f", context.getAirTemperature()));
+
+        player.sendMessage(message);
+    }
+
+    /**
+     * 执行冻屏效果
+     * 格式: SCREEN_FREEZE:ticks
+     */
+    private void executeScreenFreezeEffect(Player player, String[] parts, SeasonEventContext context) {
+        if (parts.length < 2) return;
+
+        try {
+            int ticks = Integer.parseInt(parts[1]);
+            // 通过给予盲目效果来实现冻屏
+            player.addPotionEffect(new PotionEffect(
+                    PotionEffectType.BLINDNESS,
+                    ticks,
+                    0,
+                    false,
+                    false
+            ));
+        } catch (NumberFormatException e) {
+            plugin.getLogger().warning("Invalid screen freeze duration: " + parts[1]);
+        }
+    }
+
+    /**
+     * 执行伤害效果
+     * 格式: DAMAGE:amount
+     */
+    private void executeDamageEffect(Player player, String[] parts, SeasonEventContext context) {
+        if (parts.length < 2) return;
+
+        try {
+            double damage = Double.parseDouble(parts[1]);
+            player.damage(damage);
+        } catch (NumberFormatException e) {
+            plugin.getLogger().warning("Invalid damage amount: " + parts[1]);
+        }
+    }
+
+    /**
+     * 执行治疗效果
+     * 格式: HEAL:amount
+     */
+    private void executeHealEffect(Player player, String[] parts, SeasonEventContext context) {
+        if (parts.length < 2) return;
+
+        try {
+            double heal = Double.parseDouble(parts[1]);
+            double newHealth = Math.min(player.getHealth() + heal, player.getMaxHealth());
+            player.setHealth(newHealth);
+        } catch (NumberFormatException e) {
+            plugin.getLogger().warning("Invalid heal amount: " + parts[1]);
+        }
+    }
+
+    /**
+     * 执行着火效果
+     * 格式: FIRE:seconds
+     */
+    private void executeFireEffect(Player player, String[] parts, SeasonEventContext context) {
+        if (parts.length < 2) return;
+
+        try {
+            int seconds = Integer.parseInt(parts[1]);
+            player.setFireTicks(seconds * 20);
+        } catch (NumberFormatException e) {
+            plugin.getLogger().warning("Invalid fire duration: " + parts[1]);
+        }
+    }
+}

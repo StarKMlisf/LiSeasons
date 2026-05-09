@@ -1,0 +1,97 @@
+# LISeasons GUI 全局配置
+# 每个菜单页面已拆分到 gui/ 文件夹：
+# - gui/overview.yml
+# - gui/month-terms.yml
+# - gui/year-terms.yml
+# - gui/temperature.yml
+# - gui/season-events.yml
+# - gui/festivals.yml
+#
+# 用法参考 TrMenu：在页面文件里通过 menu.layout 字符矩阵摆放图标。
+# icons 中 type: content 的字符就是动态内容槽位，不再需要手动维护 content-slots 列表。
+# 本文件仅保留全局兜底配置；页面文件不存在时才会回退读取这里。
+
+calendar:
+  title: "<gradient:#6b4b2a:#4f6b3c>桃源季节手账</gradient>"
+  rows: 6
+  size: 54
+
+  layout:
+    - "BBBBTBBBB"
+    - "BAAASSSAB"
+    - "BAAAPPPAB"
+    - "BAAAWWWAB"
+    - "BBBBBBBBB"
+    - "E F C M Y"
+
+  icons:
+    B:
+      material: OAK_PLANKS
+      name: " "
+    A:
+      type: content
+      material: AIR
+      name: " "
+    T:
+      material: CLOCK
+      name: "&e&l<title>"
+      lore:
+        - "&7页面：&f<page>"
+        - "&7季节：&f<season>"
+    S:
+      type: season
+      material: FLOWERING_AZALEA
+      name: "&a当前季节"
+      lore:
+        - "&7季节：&f<season>"
+        - "&7日期：&f<date>"
+    W:
+      type: temperature
+      material: CAMPFIRE
+      cold-material: SNOWBALL
+      hot-material: BLAZE_POWDER
+      name: "&c体感温度"
+      lore:
+        - "&7体感：&f<temperature>"
+        - "&7空气：&f<air>"
+        - "&7潮湿：&f<wetness>"
+    E:
+      type: page
+      page: season_events
+      material: BLAZE_ROD
+      active-material: LODESTONE
+      name: "&6季节告示板"
+    F:
+      type: page
+      page: festivals
+      material: CAKE
+      active-material: LODESTONE
+      name: "&d节日纪念册"
+    C:
+      type: close
+      material: BARRIER
+      name: "&4合上手账"
+    M:
+      type: page
+      page: month_terms
+      material: FILLED_MAP
+      active-material: LODESTONE
+      name: "&a本月节气"
+    Y:
+      type: page
+      page: year_terms
+      material: BOOKSHELF
+      active-material: LODESTONE
+      name: "&6全年节气"
+    P:
+      type: page
+      page: overview
+      material: WRITABLE_BOOK
+      active-material: LODESTONE
+      name: "&6农夫手账首页"
+    H:
+      type: page
+      page: temperature
+      material: CAMPFIRE
+      active-material: LODESTONE
+      name: "&c农事温度"

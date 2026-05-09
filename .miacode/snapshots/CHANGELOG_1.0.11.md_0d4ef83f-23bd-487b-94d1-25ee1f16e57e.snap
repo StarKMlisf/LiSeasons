@@ -1,0 +1,17 @@
+# LISeasons 1.0.11 更新说明
+
+## 调整
+
+- 节日系统默认只记录以下节日：
+  - New Year
+  - Valentine's Day
+  - Easter
+  - Halloween
+  - Christmas
+- 精简 `festivals.yml` 默认配置，移除传统节日、其他公历节日和服务器自定义节日的默认记录。
+- 节日管理器改为以 `festivals.yml` 为节日列表来源，避免自动补回配置中未声明的额外节日。
+- 新增 Easter 节日类型，并同步更新节日系统测试。
+
+## 构建
+
+- 插件版本更新为 `1.0.11`。

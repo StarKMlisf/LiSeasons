@@ -1,0 +1,407 @@
+# LISeasons GUI 菜单配置
+# 这里用于完整自定义 /seasons calendar 的 Inventory GUI。
+# 支持两种配置方式：
+# 1) layout + icons：像菜单贴图一样用字符矩阵摆放物品。
+# 2) 下方各页面节点：继续精细控制总览、节气、温度、事件、节日页的动态内容。
+# 注意：slot 从 0 开始，size 必须是 9 的倍数，最大 54。layout 每行 9 个字符，空格表示跳过。
+
+calendar:
+  title: "<gradient:#6b4b2a:#4f6b3c>桃源季节手账</gradient>"
+  rows: 6
+  size: 54
+
+  layout:
+    - "BBBBTBBBB"
+    - "BAAASSSAB"
+    - "BAAAPPPAB"
+    - "BAAAWWWAB"
+    - "BBBBBBBBB"
+    - "E F C M Y"
+
+  icons:
+    B:
+      material: OAK_PLANKS
+      name: " "
+    T:
+      material: CLOCK
+      name: "&e&l季节手账"
+      lore:
+        - "&7季节：&f<season>"
+        - "&7节气：&f<term>"
+    A:
+      material: GREEN_STAINED_GLASS_PANE
+      name: " "
+    S:
+      type: season
+      season: spring
+      material: FLOWERING_AZALEA
+      name: "&a春季"
+      lore:
+        - "&7当前季节：&f<season>"
+        - "&7今日：&f<date>"
+    P:
+      type: page
+      page: overview
+      material: WRITABLE_BOOK
+      active-material: LODESTONE
+      name: "&6农夫手账首页"
+      lore:
+        - "&7当前世界：&f<world>"
+        - "&7点击导航栏可切换页面。"
+    W:
+      type: temperature
+      material: CAMPFIRE
+      cold-material: SNOWBALL
+      hot-material: BLAZE_POWDER
+      name: "&c体感温度"
+      lore:
+        - "&7体感：&f<temperature>"
+        - "&7空气：&f<air>"
+        - "&7潮湿：&f<wetness>"
+    E:
+      type: page
+      page: season_events
+      material: BLAZE_ROD
+      active-material: LODESTONE
+      name: "&6季节告示板"
+      lore:
+        - "&7查看季节事件。"
+    F:
+      type: page
+      page: festivals
+      material: CAKE
+      active-material: LODESTONE
+      name: "&d节日纪念册"
+      lore:
+        - "&7查看节日记录。"
+    C:
+      material: BARRIER
+      name: "&4合上手账"
+      lore:
+        - "&7点击关闭菜单。"
+    M:
+      type: page
+      page: month_terms
+      material: FILLED_MAP
+      active-material: LODESTONE
+      name: "&a本月节气"
+      lore:
+        - "&7本月：&f<terms>"
+    Y:
+      type: page
+      page: year_terms
+      material: BOOKSHELF
+      active-material: LODESTONE
+      name: "&6全年节气"
+      lore:
+        - "&7查看二十四节气。"
+
+  # 季节边框装饰。layout 会优先覆盖对应槽位；关闭后不会自动填充木质边框/季节角标/玻璃装饰。
+  season-frame:
+    enabled: true
+    frame-slots: [0, 1, 2, 3, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 44, 47, 53]
+    corner-slots: [0, 8, 36, 44]
+    accent-slots: [10, 11, 12, 14, 15, 16, 28, 29, 30, 32, 33, 34]
+    seasons:
+      spring:
+        frame-material: BIRCH_PLANKS
+        corner-material: PINK_PETALS
+        accent-material: GREEN_STAINED_GLASS_PANE
+      summer:
+        frame-material: JUNGLE_PLANKS
+        corner-material: SUNFLOWER
+        accent-material: ORANGE_STAINED_GLASS_PANE
+      autumn:
+        frame-material: ACACIA_PLANKS
+        corner-material: PUMPKIN
+        accent-material: BROWN_STAINED_GLASS_PANE
+      winter:
+        frame-material: SPRUCE_PLANKS
+        corner-material: SNOW_BLOCK
+        accent-material: BLUE_STAINED_GLASS_PANE
+
+  navigation:
+    season-events:
+      enabled: true
+      slot: 45
+      material: BLAZE_ROD
+      active-material: LODESTONE
+      name: "<gold>季节告示板</gold>"
+      lore:
+        - "<dark_green>查看当前启用的季节事件。</dark_green>"
+        - "<gray>点击打开季节事件页。</gray>"
+    festivals:
+      enabled: true
+      slot: 46
+      material: CAKE
+      active-material: LODESTONE
+      name: "<light_purple>节日纪念册</light_purple>"
+      lore:
+        - "<dark_purple>查看全年节日记录。</dark_purple>"
+        - "<gray>点击打开节日页。</gray>"
+    overview:
+      enabled: true
+      slot: 48
+      material: CLOCK
+      active-material: WRITABLE_BOOK
+      name: "<gold>农夫手账首页</gold>"
+      lore:
+        - "<dark_green>回到今日季节总览。</dark_green>"
+    close:
+      enabled: true
+      slot: 49
+      material: BARRIER
+      name: "<dark_red>合上手账</dark_red>"
+      lore:
+        - "<gray>点击关闭菜单。</gray>"
+    month-terms:
+      enabled: true
+      slot: 50
+      material: FILLED_MAP
+      active-material: LODESTONE
+      name: "<green>本月节气</green>"
+      lore:
+        - "<dark_green>查看本月节气安排。</dark_green>"
+    year-terms:
+      enabled: true
+      slot: 51
+      material: BOOKSHELF
+      active-material: LODESTONE
+      name: "<gold>全年节气</gold>"
+      lore:
+        - "<dark_green>查看全年二十四节气。</dark_green>"
+    temperature:
+      enabled: true
+      slot: 52
+      material: CAMPFIRE
+      active-material: LODESTONE
+      name: "<dark_red>农事温度</dark_red>"
+      lore:
+        - "<gray>查看体感、空气温度和潮湿度。</gray>"
+
+  pagination:
+    previous:
+      enabled: true
+      slot: 47
+      material: ARROW
+      name: "<gold>上一页</gold>"
+      lore:
+        - "<gray>翻到上一页。</gray>"
+    next:
+      enabled: true
+      slot: 53
+      material: SPECTRAL_ARROW
+      name: "<gold>下一页</gold>"
+      lore:
+        - "<gray>翻到下一页。</gray>"
+
+  status-bar:
+    enabled: true
+    slot: 53
+    paged-slot: 44
+    material: NAME_TAG
+    name: "<gold>手账状态</gold>"
+    lore:
+      - "<gray>当前页面：<white><page></white></gray>"
+      - "<gray>体感：<white><temperature></white></gray>"
+      - "<gray>潮湿：<white><wetness></white></gray>"
+
+  content-slots:
+    default: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34]
+    year-terms: [10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34, 37, 38, 39]
+
+  overview:
+    season:
+      enabled: true
+      slot: 4
+      material: WRITABLE_BOOK
+      name: "<gold>农夫手账 · 今日</gold>"
+      lore:
+        - "<gray>季节：<white><season></white></gray>"
+        - "<gray>日期：<white><date></white></gray>"
+        - "<gray>世界：<white><world></white></gray>"
+    world:
+      enabled: true
+      slot: 13
+      material: MAP
+      name: "<green>农场地图</green>"
+      lore:
+        - "<gray>当前世界：<white><world></white></gray>"
+    month:
+      enabled: true
+      slot: 20
+      material: FLOWERING_AZALEA
+      name: "<green>本月田历</green>"
+      lore:
+        - "<gray>月份：<white><month></white></gray>"
+        - "<gray>节气：<white><terms></white></gray>"
+        - "<yellow>点击查看本月节气。</yellow>"
+    term:
+      enabled: true
+      slot: 21
+      material: CLOCK
+      name: "<dark_green>节气刻度</dark_green>"
+      lore:
+        - "<gray>当前节气：<white><term></white></gray>"
+        - "<yellow>点击查看全年节气。</yellow>"
+    temperature:
+      enabled: true
+      slot: 22
+      material: HONEYCOMB
+      cold-material: SNOWBALL
+      hot-material: BLAZE_POWDER
+      name: "<dark_red>体感温度</dark_red>"
+      lore:
+        - "<gray>体感：<white><temperature></white></gray>"
+        - "<gray>空气：<white><air></white></gray>"
+        - "<gray>潮湿：<white><wetness></white></gray>"
+        - "<yellow>点击查看温度说明。</yellow>"
+    weather:
+      enabled: true
+      slot: 23
+      material: WATER_BUCKET
+      name: "<dark_aqua>天气与环境</dark_aqua>"
+      lore:
+        - "<gray><weather></gray>"
+    next-term:
+      enabled: true
+      slot: 24
+      material: CAKE
+      name: "<gold>下一节气</gold>"
+      lore:
+        - "<gray><next></gray>"
+    visual:
+      enabled: true
+      slot: 31
+      material: HAY_BLOCK
+      name: "<dark_green>季节馈赠</dark_green>"
+      lore:
+        - "<gray><visual></gray>"
+
+  month-terms:
+    start-slot: 10
+    current-material: GLOW_BERRIES
+    term-material: FLOWERING_AZALEA
+    summary:
+      enabled: true
+      slot: 31
+      material: COMPASS
+      name: "<gold>本月农事小结</gold>"
+      lore:
+        - "<gray>月份：<white><month></white></gray>"
+        - "<gray>节气：<white><terms></white></gray>"
+
+  year-terms:
+    current-material: ENCHANTED_BOOK
+    term-material: FLOWERING_AZALEA
+
+  temperature-page:
+    current:
+      enabled: true
+      slot: 10
+      material: BLAZE_POWDER
+      name: "<dark_red>体感温度</dark_red>"
+      lore:
+        - "<gray>体感：<white><temperature></white></gray>"
+        - "<gray>空气：<white><air></white></gray>"
+        - "<gray>潮湿：<white><wetness></white></gray>"
+    base:
+      enabled: true
+      slot: 12
+      material: CAMPFIRE
+      name: "<gold>季节底温</gold>"
+      lore:
+        - "<gray>季节：<white><season></white></gray>"
+        - "<gray>底温：<white><base></white></gray>"
+    weather:
+      enabled: true
+      slot: 14
+      material: SPYGLASS
+      name: "<dark_aqua>天气与环境</dark_aqua>"
+      lore:
+        - "<gray>世界：<white><world></white></gray>"
+        - "<gray><weather></gray>"
+    guide:
+      enabled: true
+      slot: 16
+      material: SNOWBALL
+      name: "<yellow>农事温度提示</yellow>"
+      lore:
+        - "<gray>靠近火源、穿戴盔甲与天气都会影响体感。</gray>"
+        - "<gray>温度过高或过低时会触发对应状态。</gray>"
+    note:
+      enabled: true
+      slot: 31
+      material: BOOKSHELF
+      name: "<yellow>节气提示</yellow>"
+      lore:
+        - "<gray>当前节气：<white><term></white></gray>"
+
+  season-events:
+    title:
+      enabled: true
+      slot: 4
+      material: BLAZE_ROD
+      name: "<gold>镇口季节告示板</gold>"
+      lore:
+        - "<gray>当前季节：<white><season></white></gray>"
+        - "<gray>事件数量：<white><count></white></gray>"
+        - "<gray>页码：<white><page></white></gray>"
+    item:
+      material: FLOWERING_AZALEA
+      name: "<gold><event></gold>"
+      lore:
+        - "<gray>季节：<white><season></white></gray>"
+        - "<gray>类型：<white><type></white></gray>"
+        - "<gray>介绍：<white><description></white></gray>"
+        - "<gray>触发：<white><trigger></white></gray>"
+        - "<gray>概率：<white><chance></white></gray>"
+        - "<gray>优先级：<white><priority></white></gray>"
+        - "<gray>冷却：<white><cooldown></white> 秒</gray>"
+        - ""
+        - "<gold>事件效果</gold>"
+        - "<gray>- <white><effects></white></gray>"
+    guide:
+      enabled: true
+      slot: 40
+      material: BOOK
+      name: "<gold>告示板说明</gold>"
+      lore:
+        - "<gray>季节事件按当前季节自然触发。</gray>"
+        - "<gray>可在 season-events.yml 调整概率、冷却和效果。</gray>"
+
+  festivals:
+    title:
+      enabled: true
+      slot: 4
+      material: CAKE
+      name: "<light_purple>节日纪念册</light_purple>"
+      lore:
+        - "<gray>月份：<white><month></white></gray>"
+        - "<gray>节日数量：<white><count></white></gray>"
+        - "<gray>页码：<white><page></white></gray>"
+    item:
+      material: NETHER_STAR
+      today-material: ENCHANTED_BOOK
+      name: "<light_purple><festival></light_purple>"
+      lore:
+        - "<gray>日期：<white><date></white></gray>"
+        - "<gray>类型：<white><category></white></gray>"
+        - "<gray>介绍：<white><description></white></gray>"
+        - "<yellow><today></yellow>"
+    categories:
+      festival:
+        enabled: true
+        slot: 40
+        material: NETHER_STAR
+        name: "<light_purple>节日</light_purple>"
+        lore:
+          - "<gray>服务器节日统一显示为节日。</gray>"
+    guide:
+      enabled: true
+      slot: 41
+      material: BOOK
+      name: "<gold>纪念册说明</gold>"
+      lore:
+        - "<gray>节日列表来自 festivals.yml。</gray>"
+        - "<gray>可自定义启用、名称、日期与描述。</gray>"

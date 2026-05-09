@@ -1,0 +1,70 @@
+# LISeasons 节日配置
+# 仅保留插件默认记录的节日；如需新增节日，请先在 FestivalType 中增加对应类型。
+#
+# 配置项说明：
+# type: 节日类型，必须对应插件内置 FestivalType 枚举。
+# date: 节日日期，格式为 MM-dd，取值范围 01-01 到 12-31。
+# display-name: 节日展示名称，可使用颜色代码。
+# category: 节日分类，可选 LEGAL_HOLIDAY、GREGORIAN。
+# priority: 同一天存在多个节日时的优先级，数字越大越优先。
+# enabled: 是否启用该节日，true 启用，false 禁用。
+# description: 节日说明，会显示在节日菜单中。
+
+# 全局设置
+global:
+  # 全局节日冷却时间（秒）
+  festival-cooldown-seconds: 5
+  # 是否启用节日系统
+  enabled: true
+
+# 法定/公历节日（仅保留以下节日）
+legal-holidays:
+  new-year:
+    type: "NEW_YEAR"
+    date: "01-01"
+    display-name: "&bNew Year"
+    category: "LEGAL_HOLIDAY"
+    priority: 10
+    enabled: true
+    description: "Happy New Year! May the new adventures begin!"
+
+gregorian-festivals:
+  valentines:
+    type: "VALENTINES_DAY"
+    date: "02-14"
+    display-name: "&dValentine's Day"
+    category: "GREGORIAN"
+    priority: 8
+    enabled: true
+    description: "Happy Valentine’s Day! Share the love with everyone around you."
+
+  easter:
+    type: "EASTER"
+    date: "04-20"
+    display-name: "&eEaster"
+    category: "GREGORIAN"
+    priority: 8
+    enabled: true
+    description: "Happy Easter!"
+
+  halloween:
+    type: "HALLOWEEN"
+    date: "10-31"
+    display-name: "&6Halloween"
+    category: "GREGORIAN"
+    priority: 8
+    enabled: true
+    description: "Spooky Halloween is here! Beware of the darkness..."
+
+  christmas:
+    type: "CHRISTMAS"
+    date: "12-25"
+    display-name: "&2Christmas"
+    category: "GREGORIAN"
+    priority: 9
+    enabled: true
+    description: "Merry Christmas! The world is covered in a festive spirit."
+
+# 其他分类保留为空，避免插件加载任何额外节日。
+traditional-festivals: {}
+server-custom-festivals: {}

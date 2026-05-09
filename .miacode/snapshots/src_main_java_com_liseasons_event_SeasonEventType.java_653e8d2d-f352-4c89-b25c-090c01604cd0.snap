@@ -1,0 +1,69 @@
+package com.liseasons.event;
+
+import com.liseasons.season.Season;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * 季节事件类型枚举
+ * 定义了 13 种季节事件类型及其所属季节
+ */
+public enum SeasonEventType {
+    // 春季事件
+    SPRING_BREEZE("微风习习", Season.SPRING, Season.AUTUMN),
+    SPRING_COLD("春寒料峭", Season.SPRING),
+    SPRING_RAIN("春雨绵绵", Season.SPRING),
+    FAIR_WEATHER("风和日丽", Season.SPRING, Season.SUMMER),
+
+    // 夏季事件
+    HOT_SUN("烈日炎炎", Season.SUMMER),
+    HIGH_TEMPERATURE("炎热高温", Season.SUMMER),
+
+    // 秋季事件
+    AUTUMN_COOL("秋意渐凉", Season.AUTUMN),
+    AUTUMN_RAIN("秋雨连绵", Season.AUTUMN),
+    STORM("风暴来袭", Season.AUTUMN),
+
+    // 冬季事件
+    FREEZING_COLD("天寒地冻", Season.WINTER),
+    BONE_CHILLING("寒冷刺骨", Season.WINTER),
+    HEAVY_SNOW("大雪纷飞", Season.WINTER),
+    SLEET("冻雨淅沥", Season.WINTER);
+
+    private final String displayName;
+    private final Season primarySeason;
+    private final Set<Season> seasons;
+
+    SeasonEventType(String displayName, Season primarySeason, Season... extraSeasons) {
+        this.displayName = displayName;
+        this.primarySeason = primarySeason;
+        this.seasons = EnumSet.of(primarySeason, extraSeasons);
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public Season getSeason() {
+        return primarySeason;
+    }
+
+    public Set<Season> getSeasons() {
+        return Set.copyOf(seasons);
+    }
+
+    public boolean supportsSeason(Season season) {
+        return seasons.contains(season);
+    }
+
+    /**
+     * 获取指定季节的所有事件类型
+     */
+    public static List<SeasonEventType> getBySeason(Season season) {
+        return Arrays.stream(values())
+                .filter(type -> type.supportsSeason(season))
+                .toList();
+    }
+}

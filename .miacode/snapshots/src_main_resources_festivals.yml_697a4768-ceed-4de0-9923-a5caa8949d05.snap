@@ -1,0 +1,276 @@
+# LISeasons 节日配置
+# 定义 29 个节日及其相关信息
+
+# 全局设置
+global:
+  # 全局节日冷却时间（秒）
+  festival-cooldown-seconds: 5
+  # 是否启用节日系统
+  enabled: true
+
+# 中国传统节日 (13个)
+traditional-festivals:
+  spring-festival:
+    type: "SPRING_FESTIVAL"
+    date: "01-01"
+    display-name: "春节"
+    category: "TRADITIONAL"
+    priority: 10
+    enabled: true
+    description: "中国最重要的传统节日，象征新的开始"
+
+  lantern-festival:
+    type: "LANTERN_FESTIVAL"
+    date: "01-15"
+    display-name: "元宵节"
+    category: "TRADITIONAL"
+    priority: 9
+    enabled: true
+    description: "春节后的第一个重要节日，象征团圆"
+
+  dragon-boat-festival:
+    type: "DRAGON_BOAT_FESTIVAL"
+    date: "02-02"
+    display-name: "龙抬头"
+    category: "TRADITIONAL"
+    priority: 8
+    enabled: true
+    description: "春季的重要节日，象征春天的到来"
+
+  shangsi-festival:
+    type: "SHANGSI_FESTIVAL"
+    date: "03-03"
+    display-name: "上巳节"
+    category: "TRADITIONAL"
+    priority: 7
+    enabled: true
+    description: "古代重要的节日，象征春天的生机"
+
+  qingming-festival:
+    type: "QINGMING_FESTIVAL"
+    date: "04-05"
+    display-name: "清明节"
+    category: "TRADITIONAL"
+    priority: 10
+    enabled: true
+    description: "祭祖扫墓的重要节日"
+
+  dragon-boat-holiday:
+    type: "DRAGON_BOAT_HOLIDAY"
+    date: "05-05"
+    display-name: "端午节"
+    category: "TRADITIONAL"
+    priority: 10
+    enabled: true
+    description: "夏季的重要节日，象征驱邪避灾"
+
+  qixi-festival:
+    type: "QIXI_FESTIVAL"
+    date: "07-07"
+    display-name: "七夕节"
+    category: "TRADITIONAL"
+    priority: 8
+    enabled: true
+    description: "中国的情人节，象征爱情与相聚"
+
+  zhongyuan-festival:
+    type: "ZHONGYUAN_FESTIVAL"
+    date: "07-15"
+    display-name: "中元节"
+    category: "TRADITIONAL"
+    priority: 7
+    enabled: true
+    description: "道教重要节日，象征祭祖"
+
+  mid-autumn-festival:
+    type: "MID_AUTUMN_FESTIVAL"
+    date: "08-15"
+    display-name: "中秋节"
+    category: "TRADITIONAL"
+    priority: 10
+    enabled: true
+    description: "秋季的重要节日，象征团圆与丰收"
+
+  chongyang-festival:
+    type: "CHONGYANG_FESTIVAL"
+    date: "09-09"
+    display-name: "重阳节"
+    category: "TRADITIONAL"
+    priority: 8
+    enabled: true
+    description: "秋季的重要节日，象征敬老与长寿"
+
+  laba-festival:
+    type: "LABA_FESTIVAL"
+    date: "12-08"
+    display-name: "腊八节"
+    category: "TRADITIONAL"
+    priority: 7
+    enabled: true
+    description: "冬季的重要节日，象征新年的开始"
+
+  xiaonian:
+    type: "XIAONIAN"
+    date: "12-23"
+    display-name: "小年"
+    category: "TRADITIONAL"
+    priority: 8
+    enabled: true
+    description: "春节前的重要节日，象征新年的临近"
+
+  chuxi:
+    type: "CHUXI"
+    date: "12-30"
+    display-name: "除夕"
+    category: "TRADITIONAL"
+    priority: 10
+    enabled: true
+    description: "春节前夜，象征旧年的结束和新年的开始"
+
+# 法定节假日 (7个)
+legal-holidays:
+  new-year:
+    type: "NEW_YEAR"
+    date: "01-01"
+    display-name: "元旦"
+    category: "LEGAL_HOLIDAY"
+    priority: 9
+    enabled: true
+    description: "新年的第一天，象征新的开始"
+
+  spring-festival-holiday:
+    type: "SPRING_FESTIVAL_HOLIDAY"
+    date: "01-01"
+    display-name: "春节假期"
+    category: "LEGAL_HOLIDAY"
+    priority: 10
+    enabled: true
+    description: "中国最长的假期，象征团圆与欢乐"
+
+  qingming-holiday:
+    type: "QINGMING_HOLIDAY"
+    date: "04-05"
+    display-name: "清明假期"
+    category: "LEGAL_HOLIDAY"
+    priority: 9
+    enabled: true
+    description: "春季的重要假期，象征祭祖与踏青"
+
+  labor-day:
+    type: "LABOR_DAY"
+    date: "05-01"
+    display-name: "劳动节"
+    category: "LEGAL_HOLIDAY"
+    priority: 9
+    enabled: true
+    description: "国际劳动节，象征劳动与奋斗"
+
+  dragon-boat-holiday-legal:
+    type: "DRAGON_BOAT_HOLIDAY_LEGAL"
+    date: "05-05"
+    display-name: "端午假期"
+    category: "LEGAL_HOLIDAY"
+    priority: 9
+    enabled: true
+    description: "夏季的重要假期，象征传统与文化"
+
+  mid-autumn-holiday:
+    type: "MID_AUTUMN_HOLIDAY"
+    date: "08-15"
+    display-name: "中秋假期"
+    category: "LEGAL_HOLIDAY"
+    priority: 9
+    enabled: true
+    description: "秋季的重要假期，象征团圆与丰收"
+
+  national-day:
+    type: "NATIONAL_DAY"
+    date: "10-01"
+    display-name: "国庆节"
+    category: "LEGAL_HOLIDAY"
+    priority: 10
+    enabled: true
+    description: "国家的生日，象征繁荣与昌盛"
+
+# 常见公历节日 (9个)
+gregorian-festivals:
+  valentines-day:
+    type: "VALENTINES_DAY"
+    date: "02-14"
+    display-name: "情人节"
+    category: "GREGORIAN"
+    priority: 6
+    enabled: true
+    description: "爱情的节日，象征浪漫与温情"
+
+  womens-day:
+    type: "WOMENS_DAY"
+    date: "03-08"
+    display-name: "妇女节"
+    category: "GREGORIAN"
+    priority: 6
+    enabled: true
+    description: "女性的节日，象征平等与尊重"
+
+  tree-planting-day:
+    type: "TREE_PLANTING_DAY"
+    date: "03-12"
+    display-name: "植树节"
+    category: "GREGORIAN"
+    priority: 5
+    enabled: true
+    description: "环保的节日，象征绿色与生态"
+
+  fools-day:
+    type: "FOOLS_DAY"
+    date: "04-01"
+    display-name: "愚人节"
+    category: "GREGORIAN"
+    priority: 5
+    enabled: true
+    description: "娱乐的节日，象征欢乐与幽默"
+
+  youth-day:
+    type: "YOUTH_DAY"
+    date: "05-04"
+    display-name: "青年节"
+    category: "GREGORIAN"
+    priority: 6
+    enabled: true
+    description: "青年的节日，象征活力与希望"
+
+  childrens-day:
+    type: "CHILDRENS_DAY"
+    date: "06-01"
+    display-name: "儿童节"
+    category: "GREGORIAN"
+    priority: 7
+    enabled: true
+    description: "儿童的节日，象征快乐与天真"
+
+  teachers-day:
+    type: "TEACHERS_DAY"
+    date: "09-10"
+    display-name: "教师节"
+    category: "GREGORIAN"
+    priority: 6
+    enabled: true
+    description: "教师的节日，象征尊敬与感谢"
+
+  halloween:
+    type: "HALLOWEEN"
+    date: "10-31"
+    display-name: "万圣节"
+    category: "GREGORIAN"
+    priority: 5
+    enabled: true
+    description: "西方的传统节日，象征神秘与欢乐"
+
+  christmas:
+    type: "CHRISTMAS"
+    date: "12-25"
+    display-name: "圣诞节"
+    category: "GREGORIAN"
+    priority: 7
+    enabled: true
+    description: "西方最重要的节日，象征温暖与团圆"

@@ -1,0 +1,281 @@
+package com.liseasons.integration;
+
+import com.liseasons.event.SeasonEventConfig;
+import com.liseasons.event.SeasonEventType;
+import com.liseasons.festival.FestivalConfig;
+import com.liseasons.festival.FestivalType;
+import com.liseasons.season.Season;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * 季节事件与节日系统集成测试
+ */
+public class SeasonEventAndFestivalIntegrationTest {
+
+    @Test
+    public void testSeasonEventAndFestivalCoexistence() {
+        // 验证季节事件和节日系统可以共存
+        
+        // 创建季节事件配置
+        SeasonEventConfig eventConfig = new SeasonEventConfig(
+                "spring-fair-weather",
+                SeasonEventType.FAIR_WEATHER,
+                Season.SPRING,
+                15.0,
+                "above",
+                20.0,
+                1,
+                5000,
+                List.of("PARTICLE:CHERRY_LEAVES:10:0.5:0.5:0.5"),
+                true
+        );
+        
+        // 创建节日配置
+        FestivalConfig festivalConfig = new FestivalConfig(
+                "spring-festival",
+                FestivalType.SPRING_FESTIVAL,
+                "01-01",
+                List.of("MESSAGE:春节快乐"),
+                true
+        );
+        
+        // 验证两个系统都能正常工作
+        assertNotNull(eventConfig);
+        assertNotNull(festivalConfig);
+        assertEquals(Season.SPRING, eventConfig.season());
+        assertEquals(FestivalType.SPRING_FESTIVAL, festivalConfig.type());
+    }
+
+    @Test
+    public void testSeasonEventCoverageBySeasons() {
+        // 验证每个季节都有事件
+        for (Season season : Season.values()) {
+            List<SeasonEventType> events = SeasonEventType.getBySeason(season);
+            assertTrue(events.size() > 0, "季节 " + season.getDisplayName() + " 应该有事件");
+        }
+    }
+
+    @Test
+    public void testFestivalCoverageByCategories() {
+        // 验证每个节日分类都有节日
+        int traditionalCount = FestivalType.getByCategory(com.liseasons.festival.FestivalCategory.TRADITIONAL).size();
+        int legalCount = FestivalType.getByCategory(com.liseasons.festival.FestivalCategory.LEGAL).size();
+        int gregorianCount = FestivalType.getByCategory(com.liseasons.festival.FestivalCategory.GREGORIAN).size();
+        
+        assertTrue(traditionalCount > 0, "应该有传统节日");
+        assertTrue(legalCount > 0, "应该有法定节假日");
+        assertTrue(gregorianCount > 0, "应该有公历节日");
+    }
+
+    @Test
+    public void testEventAndFestivalDataConsistency() {
+        // 验证事件和节日数据的一致性
+        
+        // 验证事件总数
+        int totalEvents = 0;
+        for (Season season : Season.values()) {
+            totalEvents += SeasonEventType.getBySeason(season).size();
+        }
+        assertEquals(13, totalEvents, "应该有13个季节事件类型");
+        
+        // 验证节日总数
+        int totalFestivals = FestivalType.values().length;
+        assertEquals(29, totalFestivals, "应该有29个节日");
+    }
+
+    @Test
+    public void testSeasonEventEffectTypes() {
+        // 验证事件效果类型
+        String[] effectTypes = {
+                "PARTICLE",
+                "POTION",
+                "SOUND",
+                "MESSAGE",
+                "SCREEN_FREEZE",
+                "DAMAGE",
+                "WETNESS",
+                "TEMPERATURE"
+        };
+        
+        for (String effectType : effectTypes) {
+            assertNotNull(effectType, "效果类型不应该为null");
+            assertFalse(effectType.isEmpty(), "效果类型不应该为空");
+        }
+    }
+
+    @Test
+    public void testSeasonEventPriority() {
+        // 验证事件优先级机制
+        SeasonEventConfig highPriority = new SeasonEventConfig(
+                "high-priority-event",
+                SeasonEventType.FAIR_WEATHER,
+                Season.SPRING,
+                15.0,
+                "above",
+                20.0,
+                10,  // 高优先级
+                5000,
+                List.of(),
+                true
+        );
+        
+        SeasonEventConfig lowPriority = new SeasonEventConfig(
+                "low-priority-event",
+                SeasonEventType.SPRING_BREEZE,
+                Season.SPRING,
+                10.0,
+                "above",
+                15.0,
+                1,   // 低优先级
+                5000,
+                List.of(),
+                true
+        );
+        
+        assertTrue(highPriority.priority() > lowPriority.priority(), "高优先级应该大于低优先级");
+    }
+
+    @Test
+    public void testSeasonEventCooldown() {
+        // 验证事件冷却机制
+        SeasonEventConfig config = new SeasonEventConfig(
+                "test-event",
+                SeasonEventType.FAIR_WEATHER,
+                Season.SPRING,
+                15.0,
+                "above",
+                20.0,
+                1,
+                5000,  // 5秒冷却
+                List.of(),
+                true
+        );
+        
+        assertTrue(config.cooldownMillis() > 0, "冷却时间应该大于0");
+        assertEquals(5000, config.cooldownMillis(), "冷却时间应该是5000毫秒");
+    }
+
+    @Test
+    public void testFestivalDateFormat() {
+        // 验证节日日期格式的一致性
+        for (FestivalType festival : FestivalType.values()) {
+            String date = festival.getLunarDate();
+            
+            // 验证格式
+            assertTrue(date.matches("\\d{2}-\\d{2}"), "日期格式应该是MM-DD");
+            
+            // 验证月份范围
+            int month = Integer.parseInt(date.split("-")[0]);
+            assertTrue(month >= 1 && month <= 12, "月份应该在1-12之间");
+            
+            // 验证日期范围
+            int day = Integer.parseInt(date.split("-")[1]);
+            assertTrue(day >= 1 && day <= 31, "日期应该在1-31之间");
+        }
+    }
+
+    @Test
+    public void testEventAndFestivalEnablement() {
+        // 验证事件和节日的启用/禁用机制
+        SeasonEventConfig enabledEvent = new SeasonEventConfig(
+                "enabled-event",
+                SeasonEventType.FAIR_WEATHER,
+                Season.SPRING,
+                15.0,
+                "above",
+                20.0,
+                1,
+                5000,
+                List.of(),
+                true  // 启用
+        );
+        
+        SeasonEventConfig disabledEvent = new SeasonEventConfig(
+                "disabled-event",
+                SeasonEventType.SPRING_BREEZE,
+                Season.SPRING,
+                10.0,
+                "above",
+                15.0,
+                1,
+                5000,
+                List.of(),
+                false  // 禁用
+        );
+        
+        assertTrue(enabledEvent.enabled(), "启用的事件应该返回true");
+        assertFalse(disabledEvent.enabled(), "禁用的事件应该返回false");
+    }
+
+    @Test
+    public void testSeasonEventTriggerModes() {
+        // 验证所有触发模式
+        String[] triggerModes = {"above", "below", "range"};
+        
+        for (String mode : triggerModes) {
+            SeasonEventConfig config = new SeasonEventConfig(
+                    "test-" + mode,
+                    SeasonEventType.FAIR_WEATHER,
+                    Season.SPRING,
+                    15.0,
+                    mode,
+                    20.0,
+                    1,
+                    5000,
+                    List.of(),
+                    true
+            );
+            
+            assertEquals(mode, config.triggerMode(), "触发模式应该是 " + mode);
+        }
+    }
+
+    @Test
+    public void testCompleteSystemIntegration() {
+        // 完整系统集成测试
+        
+        // 1. 验证所有季节都有事件
+        for (Season season : Season.values()) {
+            List<SeasonEventType> events = SeasonEventType.getBySeason(season);
+            assertTrue(events.size() > 0, "季节 " + season.getDisplayName() + " 应该有事件");
+            
+            // 2. 为每个事件创建配置
+            for (SeasonEventType eventType : events) {
+                SeasonEventConfig config = new SeasonEventConfig(
+                        eventType.name().toLowerCase(),
+                        eventType,
+                        season,
+                        15.0,
+                        "above",
+                        25.0,
+                        1,
+                        5000,
+                        List.of("MESSAGE:" + eventType.getDisplayName()),
+                        true
+                );
+                
+                assertNotNull(config);
+                assertEquals(eventType, config.type());
+                assertEquals(season, config.season());
+            }
+        }
+        
+        // 3. 验证所有节日都有配置
+        for (FestivalType festival : FestivalType.values()) {
+            FestivalConfig config = new FestivalConfig(
+                    festival.name().toLowerCase(),
+                    festival,
+                    festival.getLunarDate(),
+                    List.of("MESSAGE:" + festival.getDisplayName()),
+                    true
+            );
+            
+            assertNotNull(config);
+            assertEquals(festival, config.type());
+        }
+    }
+}

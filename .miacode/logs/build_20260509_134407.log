@@ -1,0 +1,11 @@
+Workflow Execution: LISeasons Plugin Build (1cf1b9fa-6d56-4ae1-9eff-9a0cb6b70c11)
+Started at: 2026-05-09T13:44:07.046978400+00:00
+Execution backend: Host, virtual workspace: /workspace\LiSeasons
+
+============================================================
+  Node: java-version (JavaVersion)
+============================================================
+
+✗ Failed: Java environment error: Download failed: official API failed: Download failed: Failed to parse Adoptium API JSON: https://api.adoptium.net/v3/assets/latest/21/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse (content-type: application/json;charset=UTF-8, body-prefix: "[\n    {\n        \"binary\": {\n            \"architecture\": \"x64\",\n            \"download_count\": 252821,\n            \"heap_size\": \"normal\",\n            \"image_type\": \"jdk\",\n            \"installer\": {\n                \"checksum\": \"93a9c20f4ce967d78992edc5e6fdcc250a56019080553d5d20846decb51d9c01\",\n        "): missing field `binaries` at line 46 column 5
+
+Workflow failed in 954ms

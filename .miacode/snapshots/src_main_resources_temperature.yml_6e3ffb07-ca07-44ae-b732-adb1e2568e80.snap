@@ -1,0 +1,248 @@
+# LISeasons 体温系统配置
+# 中国服舒适版：有四季、有体感，但不折磨玩家。
+# 体温模型已拆分为空气温度和玩家体温：空气温度由季节、节气、群系、天气决定，玩家体温会逐步趋近空气温度，并受水、装备、火源等影响。
+
+# 旧版固定基础温度。base-temperature.mode 不为 daily-random 时使用这里。
+season-base-temperature:
+  spring: 16
+  summer: 26
+  autumn: 18
+  winter: 2
+
+base-temperature:
+  # daily-random=每天按季节范围生成一个稳定基础气温；fixed=使用 season-base-temperature 固定值。
+  mode: daily-random
+  season:
+    spring:
+      min: 8
+      max: 22
+    summer:
+      min: 24
+      max: 34
+    autumn:
+      min: 10
+      max: 24
+    winter:
+      min: -4
+      max: 8
+
+solar-term-modifier:
+  # 是否启用二十四节气温度修正。
+  enable: true
+  lichun: -2
+  yushui: -1
+  jingzhe: 1
+  chunfen: 3
+  qingming: 5
+  guyu: 6
+  lixia: 8
+  xiaoman: 10
+  mangzhong: 12
+  xiazhi: 14
+  xiaoshu: 16
+  dashu: 18
+  liqiu: 12
+  chushu: 8
+  bailu: 4
+  qiufen: 2
+  hanlu: -1
+  shuangjiang: -3
+  lidong: -5
+  xiaoxue: -7
+  daxue: -9
+  dongzhi: -10
+  xiaohan: -12
+  dahan: -13
+
+# 原版 biome 温度权重。0=忽略原版温度，5=轻度参与，16=旧版强参与。
+biome-vanilla-scale: 5.0
+
+# 夏季白天会额外升温的热带群系关键词。
+tropical-biomes:
+  - "desert"
+  - "badlands"
+  - "jungle"
+  - "savanna"
+
+# 群系温度修正。关键词匹配群系名，例如 snowy 会匹配 minecraft:snowy_plains。
+biome-overrides:
+  snowy: -5
+  frozen: -6
+  grove: -3
+  peak: -4
+  taiga: -2
+  river: -1
+  ocean: -2
+  swamp: 1
+  plains: 0
+  forest: 0
+  meadow: 0
+  beach: 1
+  desert: 3
+  badlands: 4
+  jungle: 2
+  savanna: 2
+
+condition:
+  # 空气温度修正。
+  shade: -1.0
+  # 兼容旧配置字段。新版主要使用 night-min/day-max 做昼夜曲线。
+  night: -2.0
+  # 午夜附近逐步达到的最大降温。
+  night-min: -3.0
+  # 正午附近逐步达到的最大升温。
+  day-max: 2.0
+  rain: -2.5
+  thunder: -4.0
+  underground: 1.5
+  high-altitude-start-y: 120.0
+  high-altitude: -3.0
+  tropical-summer-day: 4.0
+
+  # 旧版盔甲保暖备用值。armor 节点没有匹配材质时使用这里。
+  armor-per-piece: 1.0
+
+  # 手持物品温度修正。
+  held-torch: 1.0
+  held-soul-torch: -2.0
+  held-lava-bucket: 5.0
+
+  # 附近方块温度修正。普通火源升温，灵魂火和冰类降温。
+  nearby-fire: 4.0
+  nearby-soul-fire: -8.0
+  nearby-campfire: 6.0
+  nearby-soul-campfire: -6.0
+  nearby-lava: 8.0
+  nearby-ice: -3.0
+  nearby-packed-ice: -4.0
+  nearby-blue-ice: -8.0
+  nearby-heat-range: 3
+
+  # 入水基础惩罚。玩家离水后会按 water 节点的潮湿恢复配置逐步消退。
+  water-default: -4.0
+  water-winter: -10.0
+
+water:
+  # 每次恢复减少多少潮湿值。1.0 表示完全潮湿，0.0 表示干燥。
+  wetness-recovery-per-step: 0.2
+  # 潮湿恢复间隔，单位 tick。
+  wetness-recovery-interval-ticks: 40
+
+armor:
+  # 每件对应材质盔甲提供的保暖值。
+  leather: 4.0
+  chainmail: 1.5
+  iron: 1.0
+  golden: 1.0
+  diamond: 1.0
+  netherite: 0.75
+  # 空气温度高于此值时，皮革盔甲不再提供保暖，避免夏季穿皮革反而变成过热陷阱。
+  leather-disabled-above: 25.0
+
+items:
+  # 自定义手持物品温度修正。键名使用 Bukkit Material 小写名称。
+  # 正数升温，负数降温。
+  held:
+    torch: 1.0
+    soul_torch: -2.0
+    lava_bucket: 5.0
+    snowball: -1.0
+    ice: -2.0
+    blue_ice: -4.0
+
+# 玩家体温每次检测最多向目标体温变化多少度。越小越平滑，越大反应越快。
+body-temperature-step: 2.0
+
+# 温度显示小数位，建议 0-1。
+display-decimals: 1
+
+action-bar:
+  # 是否在操作栏持续显示体感温度。
+  enable: true
+
+# 温度检查与事件处理间隔，20 tick = 1 秒。
+event-interval-ticks: 40
+
+# 是否启用温度事件。
+temperatureEventsEnabled: true
+
+# highest-only=同一轮只触发优先级最高/最严重事件；all=所有命中事件都触发。
+temperature-event-mode: "highest-only"
+
+# 同一玩家全局温度事件冷却，单位秒。
+temperature-event-cooldown-seconds: 5
+
+# 温度事件。
+# mode: below 表示低于阈值触发，above 表示高于阈值触发。
+# priority 越大优先级越高；cooldown-seconds 是单个事件自己的冷却。
+# SCREEN_FREEZE:<ticks>
+# PLAY_SOUND:<SOUND>:<VOLUME>:<PITCH>
+# PARTICLE:<PARTICLE>:<AMOUNT>:<OFFSET> [@EyeHeight]
+# POTION:<EFFECT>:<AMPLIFIER>:<TICKS>
+# BURN:<SECONDS>
+# ENTITY_EFFECT:<EFFECT>
+temperatureEvents:
+  freeze:
+    temperature: -26
+    mode: below
+    priority: 40
+    cooldown-seconds: 8
+    effects:
+      - "SCREEN_FREEZE:160"
+      - "PLAY_SOUND:BLOCK_SNOW_PLACE:1:0.2"
+
+  ice_forming:
+    temperature: -20
+    mode: below
+    priority: 30
+    cooldown-seconds: 6
+    effects:
+      - "SCREEN_FREEZE:40"
+      - "PARTICLE:SNOWFLAKE:4:0.5 @EyeHeight"
+      - "PLAY_SOUND:BLOCK_POWDER_SNOW_FALL:1:0.2"
+
+  shivering:
+    temperature: -12
+    mode: below
+    priority: 20
+    cooldown-seconds: 5
+    effects:
+      - "POTION:SLOWNESS:0:40"
+      - "SCREEN_FREEZE:10"
+
+  breath_visibility:
+    temperature: -2
+    mode: below
+    priority: 10
+    cooldown-seconds: 4
+    effects:
+      - "PARTICLE:SNOWFLAKE:3:0 @EyeHeight"
+
+  sweating:
+    temperature: 38
+    mode: above
+    priority: 10
+    cooldown-seconds: 4
+    effects:
+      - "PARTICLE:SPLASH:8:0.2 @EyeHeight"
+
+  heat_warning:
+    temperature: 46
+    mode: above
+    priority: 20
+    cooldown-seconds: 5
+    effects:
+      - "POTION:WEAKNESS:0:80"
+      - "PARTICLE:SPLASH:12:0.2 @EyeHeight"
+      - "PLAY_SOUND:BLOCK_FURNACE_FIRE_CRACKLE:0.6:0.6"
+
+  heatstroke:
+    temperature: 56
+    mode: above
+    priority: 30
+    cooldown-seconds: 8
+    effects:
+      - "POTION:NAUSEA:0:120"
+      - "ENTITY_EFFECT:HURT"
+      - "PARTICLE:SMALL_FLAME:10:0.2 @EyeHeight"
+      - "PLAY_SOUND:BLOCK_FIRE_AMBIENT:0.7:0.7"

@@ -1,0 +1,71 @@
+package com.liseasons.festival;
+
+import java.time.MonthDay;
+
+/**
+ * 节日类型枚举。
+ * 仅保留插件默认记录的节日，避免加载与配置无关的额外节日。
+ */
+public enum FestivalType {
+    // 法定/公历节日
+    NEW_YEAR("New Year", MonthDay.of(1, 1), FestivalCategory.LEGAL_HOLIDAY),
+    VALENTINES_DAY("Valentine's Day", MonthDay.of(2, 14), FestivalCategory.GREGORIAN),
+    EASTER("Easter", MonthDay.of(4, 20), FestivalCategory.GREGORIAN),
+    HALLOWEEN("Halloween", MonthDay.of(10, 31), FestivalCategory.GREGORIAN),
+    CHRISTMAS("Christmas", MonthDay.of(12, 25), FestivalCategory.GREGORIAN);
+
+    private final String displayName;
+    private final MonthDay date;
+    private final FestivalCategory category;
+
+    FestivalType(String displayName, MonthDay date, FestivalCategory category) {
+        this.displayName = displayName;
+        this.date = date;
+        this.category = category;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public MonthDay getDate() {
+        return date;
+    }
+
+    public String getLunarDate() {
+        return String.format("%02d-%02d", date.getMonthValue(), date.getDayOfMonth());
+    }
+
+    public FestivalCategory getCategory() {
+        return category;
+    }
+
+    /**
+     * 获取指定分类的所有节日
+     */
+    public static java.util.List<FestivalType> getByCategory(FestivalCategory category) {
+        return java.util.Arrays.stream(values())
+                .filter(type -> type.category == category)
+                .toList();
+    }
+
+    /**
+     * 节日分类
+     */
+    public enum FestivalCategory {
+        TRADITIONAL("传统节日"),
+        LEGAL_HOLIDAY("法定/公历节日"),
+        GREGORIAN("公历节日"),
+        SERVER_CUSTOM("服务器自定义节日");
+
+        private final String displayName;
+
+        FestivalCategory(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+}

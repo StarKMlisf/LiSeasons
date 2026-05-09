@@ -1,0 +1,110 @@
+package com.liseasons.festival;
+
+import java.time.MonthDay;
+
+/**
+ * 节日类型枚举
+ * 定义了 38 个节日及其默认日期
+ */
+public enum FestivalType {
+    // 中国传统节日 (13个)
+    SPRING_FESTIVAL("春节", MonthDay.of(1, 1), FestivalCategory.TRADITIONAL),
+    LANTERN_FESTIVAL("元宵节", MonthDay.of(1, 15), FestivalCategory.TRADITIONAL),
+    DRAGON_BOAT_FESTIVAL("龙抬头", MonthDay.of(2, 2), FestivalCategory.TRADITIONAL),
+    SHANGSI_FESTIVAL("上巳节", MonthDay.of(3, 3), FestivalCategory.TRADITIONAL),
+    QINGMING_FESTIVAL("清明节", MonthDay.of(4, 5), FestivalCategory.TRADITIONAL),
+    DRAGON_BOAT_HOLIDAY("端午节", MonthDay.of(5, 5), FestivalCategory.TRADITIONAL),
+    QIXI_FESTIVAL("七夕节", MonthDay.of(7, 7), FestivalCategory.TRADITIONAL),
+    ZHONGYUAN_FESTIVAL("中元节", MonthDay.of(7, 15), FestivalCategory.TRADITIONAL),
+    MID_AUTUMN_FESTIVAL("中秋节", MonthDay.of(8, 15), FestivalCategory.TRADITIONAL),
+    CHONGYANG_FESTIVAL("重阳节", MonthDay.of(9, 9), FestivalCategory.TRADITIONAL),
+    LABA_FESTIVAL("腊八节", MonthDay.of(12, 8), FestivalCategory.TRADITIONAL),
+    XIAONIAN("小年", MonthDay.of(12, 23), FestivalCategory.TRADITIONAL),
+    CHUXI("除夕", MonthDay.of(12, 30), FestivalCategory.TRADITIONAL),
+
+    // 法定节假日 (7个)
+    NEW_YEAR("元旦", MonthDay.of(1, 1), FestivalCategory.LEGAL_HOLIDAY),
+    SPRING_FESTIVAL_HOLIDAY("春节假期", MonthDay.of(1, 1), FestivalCategory.LEGAL_HOLIDAY),
+    QINGMING_HOLIDAY("清明假期", MonthDay.of(4, 5), FestivalCategory.LEGAL_HOLIDAY),
+    LABOR_DAY("劳动节", MonthDay.of(5, 1), FestivalCategory.LEGAL_HOLIDAY),
+    DRAGON_BOAT_HOLIDAY_LEGAL("端午假期", MonthDay.of(5, 5), FestivalCategory.LEGAL_HOLIDAY),
+    MID_AUTUMN_HOLIDAY("中秋假期", MonthDay.of(8, 15), FestivalCategory.LEGAL_HOLIDAY),
+    NATIONAL_DAY("国庆节", MonthDay.of(10, 1), FestivalCategory.LEGAL_HOLIDAY),
+
+    // 常见公历节日 (9个)
+    VALENTINES_DAY("情人节", MonthDay.of(2, 14), FestivalCategory.GREGORIAN),
+    WOMENS_DAY("妇女节", MonthDay.of(3, 8), FestivalCategory.GREGORIAN),
+    TREE_PLANTING_DAY("植树节", MonthDay.of(3, 12), FestivalCategory.GREGORIAN),
+    FOOLS_DAY("愚人节", MonthDay.of(4, 1), FestivalCategory.GREGORIAN),
+    YOUTH_DAY("青年节", MonthDay.of(5, 4), FestivalCategory.GREGORIAN),
+    CHILDRENS_DAY("儿童节", MonthDay.of(6, 1), FestivalCategory.GREGORIAN),
+    TEACHERS_DAY("教师节", MonthDay.of(9, 10), FestivalCategory.GREGORIAN),
+    HALLOWEEN("万圣节", MonthDay.of(10, 31), FestivalCategory.GREGORIAN),
+    CHRISTMAS("圣诞节", MonthDay.of(12, 25), FestivalCategory.GREGORIAN),
+
+    // 服务器自定义节日 (9个)
+    SERVER_ANNIVERSARY("服务器周年庆", MonthDay.of(1, 10), FestivalCategory.SERVER_CUSTOM),
+    VERSION_UPDATE_DAY("版本更新日", MonthDay.of(2, 10), FestivalCategory.SERVER_CUSTOM),
+    BUILDING_CONTEST_DAY("建筑比赛日", MonthDay.of(3, 20), FestivalCategory.SERVER_CUSTOM),
+    FISHING_FESTIVAL("钓鱼节", MonthDay.of(4, 20), FestivalCategory.SERVER_CUSTOM),
+    MINING_FESTIVAL("挖矿节", MonthDay.of(5, 20), FestivalCategory.SERVER_CUSTOM),
+    HARVEST_FESTIVAL("丰收节", MonthDay.of(9, 22), FestivalCategory.SERVER_CUSTOM),
+    HUNTING_FESTIVAL("狩猎节", MonthDay.of(10, 18), FestivalCategory.SERVER_CUSTOM),
+    MARKET_DAY("集市日", MonthDay.of(11, 11), FestivalCategory.SERVER_CUSTOM),
+    DOUBLE_REWARD_DAY("双倍奖励日", MonthDay.of(12, 31), FestivalCategory.SERVER_CUSTOM);
+
+    private final String displayName;
+    private final MonthDay date;
+    private final FestivalCategory category;
+
+    FestivalType(String displayName, MonthDay date, FestivalCategory category) {
+        this.displayName = displayName;
+        this.date = date;
+        this.category = category;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public MonthDay getDate() {
+        return date;
+    }
+
+    public String getLunarDate() {
+        return String.format("%02d-%02d", date.getMonthValue(), date.getDayOfMonth());
+    }
+
+    public FestivalCategory getCategory() {
+        return category;
+    }
+
+    /**
+     * 获取指定分类的所有节日
+     */
+    public static java.util.List<FestivalType> getByCategory(FestivalCategory category) {
+        return java.util.Arrays.stream(values())
+                .filter(type -> type.category == category)
+                .toList();
+    }
+
+    /**
+     * 节日分类
+     */
+    public enum FestivalCategory {
+        TRADITIONAL("传统节日"),
+        LEGAL_HOLIDAY("法定节假日"),
+        GREGORIAN("公历节日"),
+        SERVER_CUSTOM("服务器自定义节日");
+
+        private final String displayName;
+
+        FestivalCategory(String displayName) {
+            this.displayName = displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+    }
+}

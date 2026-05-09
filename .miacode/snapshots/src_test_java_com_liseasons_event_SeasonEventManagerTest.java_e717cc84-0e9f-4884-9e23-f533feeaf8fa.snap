@@ -1,0 +1,144 @@
+package com.liseasons.event;
+
+import com.liseasons.season.Season;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * 季节事件管理器单元测试
+ */
+public class SeasonEventManagerTest {
+
+    @BeforeEach
+    public void setUp() {
+        // 初始化测试环境
+    }
+
+    @Test
+    public void testSeasonEventTypeEnumeration() {
+        // 验证所有13种事件类型都已定义
+        SeasonEventType[] types = SeasonEventType.values();
+        assertEquals(13, types.length, "应该有13种季节事件类型");
+    }
+
+    @Test
+    public void testSeasonEventTypesBySeasonSpring() {
+        // 验证春季事件
+        List<SeasonEventType> springEvents = SeasonEventType.getBySeason(Season.SPRING);
+        assertTrue(springEvents.size() > 0, "春季应该有事件");
+        assertTrue(springEvents.stream().allMatch(e -> e.getSeason() == Season.SPRING), "所有春季事件的季节应该是SPRING");
+    }
+
+    @Test
+    public void testSeasonEventTypesBySeasonSummer() {
+        // 验证夏季事件
+        List<SeasonEventType> summerEvents = SeasonEventType.getBySeason(Season.SUMMER);
+        assertTrue(summerEvents.size() > 0, "夏季应该有事件");
+        assertTrue(summerEvents.stream().allMatch(e -> e.getSeason() == Season.SUMMER), "所有夏季事件的季节应该是SUMMER");
+    }
+
+    @Test
+    public void testSeasonEventTypesBySeasonAutumn() {
+        // 验证秋季事件
+        List<SeasonEventType> autumnEvents = SeasonEventType.getBySeason(Season.AUTUMN);
+        assertTrue(autumnEvents.size() > 0, "秋季应该有事件");
+        assertTrue(autumnEvents.stream().allMatch(e -> e.getSeason() == Season.AUTUMN), "所有秋季事件的季节应该是AUTUMN");
+    }
+
+    @Test
+    public void testSeasonEventTypesBySeasonWinter() {
+        // 验证冬季事件
+        List<SeasonEventType> winterEvents = SeasonEventType.getBySeason(Season.WINTER);
+        assertTrue(winterEvents.size() > 0, "冬季应该有事件");
+        assertTrue(winterEvents.stream().allMatch(e -> e.getSeason() == Season.WINTER), "所有冬季事件的季节应该是WINTER");
+    }
+
+    @Test
+    public void testSeasonEventConfigTriggerConditions() {
+        // 测试事件触发条件
+        SeasonEventConfig config = new SeasonEventConfig(
+                "test-event",
+                SeasonEventType.FAIR_WEATHER,
+                Season.SPRING,
+                15.0,
+                "above",
+                20.0,
+                1,
+                5000,
+                List.of("PARTICLE:CHERRY_LEAVES:10:0.5:0.5:0.5"),
+                true
+        );
+
+        // 测试 "above" 模式
+        assertTrue(config.triggersAt(15.0), "温度15.0应该触发 (>= 15.0)");
+        assertTrue(config.triggersAt(20.0), "温度20.0应该触发 (>= 15.0)");
+        assertFalse(config.triggersAt(14.9), "温度14.9不应该触发 (< 15.0)");
+    }
+
+    @Test
+    public void testSeasonEventConfigTriggerConditionsBelow() {
+        // 测试 "below" 模式
+        SeasonEventConfig config = new SeasonEventConfig(
+                "test-event",
+                SeasonEventType.FREEZING_COLD,
+                Season.WINTER,
+                -5.0,
+                "below",
+                0.0,
+                1,
+                5000,
+                List.of("POTION:SLOWNESS:1:100"),
+                true
+        );
+
+        assertTrue(config.triggersAt(-5.0), "温度-5.0应该触发 (<= -5.0)");
+        assertTrue(config.triggersAt(-10.0), "温度-10.0应该触发 (<= -5.0)");
+        assertFalse(config.triggersAt(-4.9), "温度-4.9不应该触发 (> -5.0)");
+    }
+
+    @Test
+    public void testSeasonEventConfigTriggerConditionsRange() {
+        // 测试 "range" 模式
+        SeasonEventConfig config = new SeasonEventConfig(
+                "test-event",
+                SeasonEventType.HOT_SUN,
+                Season.SUMMER,
+                25.0,
+                "range",
+                35.0,
+                1,
+                5000,
+                List.of("MESSAGE:炎热高温"),
+                true
+        );
+
+        assertTrue(config.triggersAt(25.0), "温度25.0应该触发 (在范围内)");
+        assertTrue(config.triggersAt(30.0), "温度30.0应该触发 (在范围内)");
+        assertTrue(config.triggersAt(35.0), "温度35.0应该触发 (在范围内)");
+        assertFalse(config.triggersAt(24.9), "温度24.9不应该触发 (低于范围)");
+        assertFalse(config.triggersAt(35.1), "温度35.1不应该触发 (高于范围)");
+    }
+
+    @Test
+    public void testSeasonEventConfigDisplayName() {
+        // 测试事件显示名称
+        SeasonEventConfig config = new SeasonEventConfig(
+                "fair-weather-spring",
+                SeasonEventType.FAIR_WEATHER,
+                Season.SPRING,
+                15.0,
+                "above",
+                20.0,
+                1,
+                5000,
+                List.of(),
+                true
+        );
+
+        assertEquals("风和日丽", config.getDisplayName(), "显示名称应该是风和日丽");
+    }
+}

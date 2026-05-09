@@ -1,0 +1,27 @@
+name: Build LiSeasons Plugin
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 设置 JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 构建插件
+        run: mvn clean package -DskipTests
+
+      - name: 上传构建好的 JAR 插件
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiSeasons-Plugin
+          path: target/*.jar

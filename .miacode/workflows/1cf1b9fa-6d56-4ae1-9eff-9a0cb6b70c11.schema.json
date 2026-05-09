@@ -1,0 +1,21 @@
+{
+  "id": "1cf1b9fa-6d56-4ae1-9eff-9a0cb6b70c11",
+  "name": "LISeasons Plugin Build",
+  "steps": [
+    {
+      "order": 1,
+      "node_type": "JavaVersion",
+      "description": "Set Java version to JDK 21"
+    },
+    {
+      "order": 2,
+      "node_type": "BuildTool",
+      "description": "Run maven package -DskipTests"
+    },
+    {
+      "order": 3,
+      "node_type": "Output",
+      "description": "Output to: target/*.jar"
+    }
+  ]
+}

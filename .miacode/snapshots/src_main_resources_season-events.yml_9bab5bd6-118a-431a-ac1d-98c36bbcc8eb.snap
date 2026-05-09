@@ -1,0 +1,407 @@
+# LISeasons 季节事件配置
+# 定义 23 个季节事件及其触发条件和效果
+#
+# 单个事件配置项说明：
+# type: 季节事件类型，必须对应插件内置 SeasonEventType 枚举。
+# season: 事件所属季节，可选 SPRING、SUMMER、AUTUMN、WINTER。
+# trigger-temperature: 触发温度阈值，单位摄氏度。
+# trigger-mode: 触发模式，可选 above(高于等于)、below(低于等于)、range(区间内)。
+# trigger-temperature-max: 区间触发上限，仅 trigger-mode 为 range 时生效。
+# priority: 事件优先级，数字越大越优先。
+# cooldown-seconds: 单个事件对单个玩家的冷却时间，单位秒。
+# chance-percent: 满足季节和温度条件后的触发概率，取值 0-100。
+# enabled: 是否启用该事件，true 启用，false 禁用。
+# description: 事件介绍，会显示在日历菜单中。
+# effects: 事件效果列表，支持 PARTICLE、POTION、SOUND、MESSAGE、DAMAGE、HEAL、FIRE 等。
+
+# 全局设置
+global:
+  # 全局事件冷却时间（秒）
+  event-cooldown-seconds: 5
+  # 是否只触发最高优先级事件
+  highest-priority-only: true
+
+# 春季事件 (5个)
+spring-events:
+  # 1. 风和日丽：焕发生机
+  fair-weather-spring:
+    type: "FAIR_WEATHER"
+    season: "SPRING"
+    trigger-temperature: 15.0
+    trigger-mode: "above"
+    priority: 1
+    cooldown-seconds: 30
+    chance-percent: 45
+    enabled: true
+    description: "风和日丽：焕发生机"
+    effects:
+      - "PARTICLE:HAPPY_VILLAGER:5:0.5:0.5:0.5"
+      - "SOUND:ENTITY_PLAYER_LEVELUP:1.0:1.0"
+      - "MESSAGE:§a春风拂过，万物生机勃勃！"
+
+  # 2. 微风习习：抓紧帽子
+  spring-breeze-wind:
+    type: "SPRING_BREEZE"
+    season: "SPRING"
+    trigger-temperature: 10.0
+    trigger-mode: "range"
+    trigger-temperature-max: 15.0
+    priority: 2
+    cooldown-seconds: 30
+    chance-percent: 35
+    enabled: true
+    description: "微风习习：抓紧帽子"
+    effects:
+      - "PARTICLE:CLOUD:8:1.0:0.5:1.0"
+      - "POTION:SLOWNESS:0:5"
+      - "MESSAGE:§b微风吹过，要抓紧帽子！"
+
+  # 3. 微风习习：疾风助力
+  spring-breeze-speed:
+    type: "SPRING_BREEZE"
+    season: "SPRING"
+    trigger-temperature: 8.0
+    trigger-mode: "below"
+    priority: 3
+    cooldown-seconds: 30
+    chance-percent: 30
+    enabled: true
+    description: "微风习习：疾风助力"
+    effects:
+      - "PARTICLE:CLOUD:10:1.5:0.5:1.5"
+      - "POTION:SPEED:0:5"
+      - "MESSAGE:§b疾风助力，速度提升！"
+
+  # 4. 春寒料峭：瑟瑟发抖
+  spring-cold-shiver:
+    type: "SPRING_COLD"
+    season: "SPRING"
+    trigger-temperature: 5.0
+    trigger-mode: "below"
+    priority: 4
+    cooldown-seconds: 30
+    chance-percent: 28
+    enabled: true
+    description: "春寒料峭：瑟瑟发抖"
+    effects:
+      - "PARTICLE:SNOWFLAKE:10:0.5:1.0:0.5"
+      - "POTION:SLOWNESS:1:5"
+      - "MESSAGE:§c春寒料峭，瑟瑟发抖！"
+
+  # 5. 春雨绵绵：湿滑泥地
+  spring-rain-slippery:
+    type: "SPRING_RAIN"
+    season: "SPRING"
+    trigger-temperature: 12.0
+    trigger-mode: "range"
+    trigger-temperature-max: 18.0
+    priority: 5
+    cooldown-seconds: 30
+    chance-percent: 40
+    enabled: true
+    description: "春雨绵绵：湿滑泥地"
+    effects:
+      - "PARTICLE:RAIN:15:1.0:1.0:1.0"
+      - "POTION:SLOWNESS:0:5"
+      - "MESSAGE:§9春雨绵绵，地面湿滑！"
+
+# 夏季事件 (5个)
+summer-events:
+  # 1. 风和日丽：焕发生机
+  fair-weather-summer:
+    type: "FAIR_WEATHER"
+    season: "SUMMER"
+    trigger-temperature: 28.0
+    trigger-mode: "above"
+    priority: 1
+    cooldown-seconds: 30
+    chance-percent: 40
+    enabled: true
+    description: "风和日丽：焕发生机"
+    effects:
+      - "PARTICLE:HAPPY_VILLAGER:5:0.5:0.5:0.5"
+      - "SOUND:ENTITY_PLAYER_LEVELUP:1.0:1.2"
+      - "MESSAGE:§e骄阳似火，生机勃勃！"
+
+  # 2. 烈日炎炎：滚烫沙地
+  hot-sun-sand:
+    type: "HOT_SUN"
+    season: "SUMMER"
+    trigger-temperature: 32.0
+    trigger-mode: "above"
+    priority: 2
+    cooldown-seconds: 30
+    chance-percent: 35
+    enabled: true
+    description: "烈日炎炎：滚烫沙地"
+    effects:
+      - "PARTICLE:FLAME:10:0.5:0.5:0.5"
+      - "POTION:SLOWNESS:0:5"
+      - "MESSAGE:§c烈日炎炎，沙地滚烫！"
+
+  # 3. 烈日炎炎：烙铁烫手
+  hot-sun-burn:
+    type: "HOT_SUN"
+    season: "SUMMER"
+    trigger-temperature: 35.0
+    trigger-mode: "above"
+    priority: 3
+    cooldown-seconds: 30
+    chance-percent: 25
+    enabled: true
+    description: "烈日炎炎：烙铁烫手"
+    effects:
+      - "PARTICLE:FLAME:15:1.0:1.0:1.0"
+      - "DAMAGE:1.0"
+      - "MESSAGE:§4烙铁烫手，小心烫伤！"
+
+  # 4. 炎热高温：汗流浃背
+  high-temperature-sweat:
+    type: "HIGH_TEMPERATURE"
+    season: "SUMMER"
+    trigger-temperature: 30.0
+    trigger-mode: "range"
+    trigger-temperature-max: 34.0
+    priority: 4
+    cooldown-seconds: 30
+    chance-percent: 38
+    enabled: true
+    description: "炎热高温：汗流浃背"
+    effects:
+      - "PARTICLE:DRIPPING_WATER:8:0.5:1.0:0.5"
+      - "POTION:SLOWNESS:0:5"
+      - "MESSAGE:§c炎热高温，汗流浃背！"
+
+  # 5. 炎热高温：温暖舒适
+  high-temperature-comfort:
+    type: "HIGH_TEMPERATURE"
+    season: "SUMMER"
+    trigger-temperature: 25.0
+    trigger-mode: "range"
+    trigger-temperature-max: 29.0
+    priority: 5
+    cooldown-seconds: 30
+    chance-percent: 45
+    enabled: true
+    description: "炎热高温：温暖舒适"
+    effects:
+      - "PARTICLE:HAPPY_VILLAGER:5:0.5:0.5:0.5"
+      - "POTION:SPEED:0:3"
+      - "MESSAGE:§e温暖舒适，心情愉快！"
+
+# 秋季事件 (7个)
+autumn-events:
+  # 1. 微风习习：抓紧帽子
+  autumn-breeze-wind:
+    type: "SPRING_BREEZE"
+    season: "AUTUMN"
+    trigger-temperature: 15.0
+    trigger-mode: "range"
+    trigger-temperature-max: 20.0
+    priority: 1
+    cooldown-seconds: 30
+    chance-percent: 35
+    enabled: true
+    description: "微风习习：抓紧帽子"
+    effects:
+      - "PARTICLE:CLOUD:8:1.0:0.5:1.0"
+      - "POTION:SLOWNESS:0:5"
+      - "MESSAGE:§b秋风吹过，要抓紧帽子！"
+
+  # 2. 微风习习：疾风助力
+  autumn-breeze-speed:
+    type: "SPRING_BREEZE"
+    season: "AUTUMN"
+    trigger-temperature: 10.0
+    trigger-mode: "below"
+    priority: 2
+    cooldown-seconds: 30
+    chance-percent: 30
+    enabled: true
+    description: "微风习习：疾风助力"
+    effects:
+      - "PARTICLE:CLOUD:10:1.5:0.5:1.5"
+      - "POTION:SPEED:0:5"
+      - "MESSAGE:§b疾风助力，速度提升！"
+
+  # 3. 秋意渐凉：原始取暖
+  autumn-cool-warmth:
+    type: "AUTUMN_COOL"
+    season: "AUTUMN"
+    trigger-temperature: 12.0
+    trigger-mode: "below"
+    priority: 3
+    cooldown-seconds: 30
+    chance-percent: 38
+    enabled: true
+    description: "秋意渐凉：原始取暖"
+    effects:
+      - "PARTICLE:SMOKE:8:0.5:1.0:0.5"
+      - "POTION:RESISTANCE:0:5"
+      - "MESSAGE:§6秋意渐凉，需要取暖！"
+
+  # 4. 秋意渐凉：暖心炖汤
+  autumn-cool-soup:
+    type: "AUTUMN_COOL"
+    season: "AUTUMN"
+    trigger-temperature: 8.0
+    trigger-mode: "below"
+    priority: 4
+    cooldown-seconds: 30
+    chance-percent: 30
+    enabled: true
+    description: "秋意渐凉：暖心炖汤"
+    effects:
+      - "PARTICLE:HAPPY_VILLAGER:5:0.5:0.5:0.5"
+      - "HEAL:2.0"
+      - "MESSAGE:§6来碗暖汤，温暖身心！"
+
+  # 5. 秋雨连绵：湿滑泥地
+  autumn-rain-slippery:
+    type: "AUTUMN_RAIN"
+    season: "AUTUMN"
+    trigger-temperature: 15.0
+    trigger-mode: "range"
+    trigger-temperature-max: 20.0
+    priority: 5
+    cooldown-seconds: 30
+    chance-percent: 40
+    enabled: true
+    description: "秋雨连绵：湿滑泥地"
+    effects:
+      - "PARTICLE:RAIN:15:1.0:1.0:1.0"
+      - "POTION:SLOWNESS:0:5"
+      - "MESSAGE:§9秋雨连绵，地面湿滑！"
+
+  # 6. 风暴来袭：毁灭打击
+  storm-destruction:
+    type: "STORM"
+    season: "AUTUMN"
+    trigger-temperature: 5.0
+    trigger-mode: "below"
+    priority: 6
+    cooldown-seconds: 30
+    chance-percent: 18
+    enabled: true
+    description: "风暴来袭：毁灭打击"
+    effects:
+      - "PARTICLE:CLOUD:20:2.0:1.0:2.0"
+      - "DAMAGE:2.0"
+      - "MESSAGE:§4风暴来袭，毁灭打击！"
+
+  # 7. 风暴来袭：激流难行
+  storm-current:
+    type: "STORM"
+    season: "AUTUMN"
+    trigger-temperature: 8.0
+    trigger-mode: "below"
+    priority: 7
+    cooldown-seconds: 30
+    chance-percent: 25
+    enabled: true
+    description: "风暴来袭：激流难行"
+    effects:
+      - "PARTICLE:CLOUD:15:1.5:0.5:1.5"
+      - "POTION:SLOWNESS:1:5"
+      - "MESSAGE:§4激流难行，寸步难行！"
+
+# 冬季事件 (6个)
+winter-events:
+  # 1. 天寒地冻：滴水成冰
+  freezing-cold-ice:
+    type: "FREEZING_COLD"
+    season: "WINTER"
+    trigger-temperature: -5.0
+    trigger-mode: "below"
+    priority: 1
+    cooldown-seconds: 30
+    chance-percent: 35
+    enabled: true
+    description: "天寒地冻：滴水成冰"
+    effects:
+      - "PARTICLE:SNOWFLAKE:15:0.5:1.0:0.5"
+      - "POTION:SLOWNESS:1:5"
+      - "MESSAGE:§b天寒地冻，滴水成冰！"
+
+  # 2. 天寒地冻：严重冻伤
+  freezing-cold-frostbite:
+    type: "FREEZING_COLD"
+    season: "WINTER"
+    trigger-temperature: -10.0
+    trigger-mode: "below"
+    priority: 2
+    cooldown-seconds: 30
+    chance-percent: 22
+    enabled: true
+    description: "天寒地冻：严重冻伤"
+    effects:
+      - "PARTICLE:SNOWFLAKE:20:1.0:1.0:1.0"
+      - "DAMAGE:1.5"
+      - "POTION:SLOWNESS:2:5"
+      - "MESSAGE:§4严重冻伤，生命危险！"
+
+  # 3. 寒冷刺骨：原始取暖
+  bone-chilling-warmth:
+    type: "BONE_CHILLING"
+    season: "WINTER"
+    trigger-temperature: -2.0
+    trigger-mode: "below"
+    priority: 3
+    cooldown-seconds: 30
+    chance-percent: 38
+    enabled: true
+    description: "寒冷刺骨：原始取暖"
+    effects:
+      - "PARTICLE:SMOKE:8:0.5:1.0:0.5"
+      - "POTION:RESISTANCE:0:5"
+      - "MESSAGE:§6寒冷刺骨，需要取暖！"
+
+  # 4. 寒冷刺骨：暖心炖汤
+  bone-chilling-soup:
+    type: "BONE_CHILLING"
+    season: "WINTER"
+    trigger-temperature: -5.0
+    trigger-mode: "below"
+    priority: 4
+    cooldown-seconds: 30
+    chance-percent: 30
+    enabled: true
+    description: "寒冷刺骨：暖心炖汤"
+    effects:
+      - "PARTICLE:HAPPY_VILLAGER:5:0.5:0.5:0.5"
+      - "HEAL:3.0"
+      - "MESSAGE:§6来碗暖汤，温暖身心！"
+
+  # 5. 大雪纷飞：厚实外套
+  heavy-snow-coat:
+    type: "HEAVY_SNOW"
+    season: "WINTER"
+    trigger-temperature: 0.0
+    trigger-mode: "range"
+    trigger-temperature-max: 5.0
+    priority: 5
+    cooldown-seconds: 30
+    chance-percent: 35
+    enabled: true
+    description: "大雪纷飞：厚实外套"
+    effects:
+      - "PARTICLE:SNOWFLAKE:15:1.0:1.0:1.0"
+      - "POTION:RESISTANCE:0:5"
+      - "MESSAGE:§b大雪纷飞，穿上厚实外套！"
+
+  # 6. 冻雨淅沥：湿滑泥地
+  sleet-slippery:
+    type: "SLEET"
+    season: "WINTER"
+    trigger-temperature: -3.0
+    trigger-mode: "range"
+    trigger-temperature-max: 2.0
+    priority: 6
+    cooldown-seconds: 30
+    chance-percent: 32
+    enabled: true
+    description: "冻雨淅沥：湿滑泥地"
+    effects:
+      - "PARTICLE:RAIN:15:1.0:1.0:1.0"
+      - "POTION:SLOWNESS:0:5"
+      - "MESSAGE:§9冻雨淅沥，地面湿滑！"

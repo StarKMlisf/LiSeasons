@@ -1,0 +1,111 @@
+package com.liseasons.config;
+
+import com.liseasons.festival.FestivalConfig;
+import com.liseasons.festival.FestivalType;
+import org.bukkit.configuration.ConfigurationSection;
+
+import java.time.MonthDay;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 节日配置加载器
+ */
+public class FestivalConfigLoader {
+    
+    /**
+     * 从配置文件加载节日配置
+     */
+    public static List<FestivalConfig> loadFestivals(ConfigurationSection config) {
+        List<FestivalConfig> festivals = new ArrayList<>();
+        
+        if (config == null) {
+            return festivals;
+        }
+
+        // 加载传统节日
+        loadFestivalsByCategory(config, "traditional-festivals", festivals);
+        
+        // 加载法定节假日
+        loadFestivalsByCategory(config, "legal-holidays", festivals);
+        
+        // 加载公历节日
+        loadFestivalsByCategory(config, "gregorian-festivals", festivals);
+
+        return festivals;
+    }
+
+    /**
+     * 加载指定分类的节日
+     */
+    private static void loadFestivalsByCategory(
+            ConfigurationSection config,
+            String categoryKey,
+            List<FestivalConfig> festivals
+    ) {
+        ConfigurationSection categorySection = config.getConfigurationSection(categoryKey);
+        if (categorySection == null) {
+            return;
+        }
+
+        for (String festivalKey : categorySection.getKeys(false)) {
+            ConfigurationSection festivalSection = categorySection.getConfigurationSection(festivalKey);
+            if (festivalSection == null) {
+                continue;
+            }
+
+            try {
+                FestivalConfig festivalConfig = loadSingleFestival(festivalKey, festivalSection);
+                if (festivalConfig != null) {
+                    festivals.add(festivalConfig);
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to load festival: " + festivalKey + " - " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 加载单个节日配置
+     */
+    private static FestivalConfig loadSingleFestival(String festivalId, ConfigurationSection section) {
+        String typeStr = section.getString("type");
+        if (typeStr == null) {
+            throw new IllegalArgumentException("Festival type not specified");
+        }
+
+        FestivalType type = FestivalType.valueOf(typeStr);
+        
+        String dateStr = section.getString("date");
+        if (dateStr == null) {
+            throw new IllegalArgumentException("Festival date not specified");
+        }
+
+        // 解析日期格式 "MM-dd"
+        String[] dateParts = dateStr.split("-");
+        if (dateParts.length != 2) {
+            throw new IllegalArgumentException("Invalid date format: " + dateStr);
+        }
+
+        int month = Integer.parseInt(dateParts[0]);
+        int day = Integer.parseInt(dateParts[1]);
+        MonthDay date = MonthDay.of(month, day);
+
+        String displayName = section.getString("display-name", type.getDisplayName());
+        String categoryStr = section.getString("category", "TRADITIONAL");
+        FestivalType.FestivalCategory category = FestivalType.FestivalCategory.valueOf(categoryStr);
+        
+        int priority = section.getInt("priority", 0);
+        boolean enabled = section.getBoolean("enabled", true);
+
+        return new FestivalConfig(
+                festivalId,
+                type,
+                date,
+                displayName,
+                category,
+                enabled,
+                priority
+        );
+    }
+}

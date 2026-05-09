@@ -1,0 +1,248 @@
+# LISeasons 季节事件配置
+# 默认事件改为按季节自然触发，不再按照温度阈值触发。
+#
+# 单个事件配置项说明：
+# type: 季节事件类型，必须对应插件内置 SeasonEventType 枚举。
+# season: 事件所属季节，可选 SPRING、SUMMER、AUTUMN、WINTER。
+# trigger-mode: 触发模式。默认 season 表示只按季节、冷却与概率触发；above/below/range 仅作为旧温度配置兼容。
+# priority: 事件优先级，数字越大越优先触发。
+# cooldown-seconds: 单个事件对单个玩家的冷却时间，单位秒。
+# chance-percent: 每次检查时触发该事件的概率，0-100。
+# enabled: 是否启用该事件。
+# description: 事件说明，会显示在季节事件菜单中。
+# effects: 效果列表，格式 TYPE:param1:param2...
+
+# 全局设置
+global:
+  # 全局事件冷却时间（秒）
+  event-cooldown-seconds: 5
+  # 是否只触发最高优先级事件
+  highest-priority-only: true
+
+spring-events:
+  fair-weather:
+    type: "FAIR_WEATHER"
+    season: "SPRING"
+    trigger-mode: "season"
+    priority: 10
+    cooldown-seconds: 90
+    chance-percent: 35
+    enabled: true
+    description: "风和日丽：全天获得生命恢复 I，草地颜色更鲜艳，动物生成率提升。"
+    effects:
+      - "POTION:REGENERATION:0:20"
+      - "PARTICLE:HAPPY_VILLAGER:18:0.8:0.5:0.8"
+      - "MESSAGE:§a风和日丽，草地显得更鲜艳，动物也更愿意出来活动。"
+
+  spring-breeze:
+    type: "SPRING_BREEZE"
+    season: "SPRING"
+    trigger-mode: "season"
+    priority: 8
+    cooldown-seconds: 80
+    chance-percent: 30
+    enabled: true
+    description: "微风习习：轻质头盔有概率被吹掉，玩家随机获得速度 I，树叶粒子飘动。"
+    effects:
+      - "POTION:SPEED:0:18"
+      - "PARTICLE:CHERRY_LEAVES:28:1.0:0.8:1.0"
+      - "MESSAGE:§f微风掠过树梢，轻快的脚步伴着树叶飘动。"
+
+  spring-cold:
+    type: "SPRING_COLD"
+    season: "SPRING"
+    trigger-mode: "season"
+    priority: 7
+    cooldown-seconds: 100
+    chance-percent: 25
+    enabled: true
+    description: "春寒料峭：水中移动受到伤害，夜晚温度下降，作物生长速度降低。"
+    effects:
+      - "DAMAGE:1.0"
+      - "PARTICLE:SNOWFLAKE:12:0.5:0.4:0.5"
+      - "MESSAGE:§b春寒料峭，靠近水边时寒意更明显。"
+
+  spring-rain:
+    type: "SPRING_RAIN"
+    season: "SPRING"
+    trigger-mode: "season"
+    priority: 6
+    cooldown-seconds: 90
+    chance-percent: 30
+    enabled: true
+    description: "春雨绵绵：耕地变泥泞，移动时获得缓慢，河流区域鱼类增多。"
+    effects:
+      - "POTION:SLOWNESS:0:12"
+      - "PARTICLE:FALLING_WATER:24:0.8:0.8:0.8"
+      - "MESSAGE:§9春雨绵绵，泥泞的田垄让脚步慢了下来。"
+
+summer-events:
+  hot-sun:
+    type: "HOT_SUN"
+    season: "SUMMER"
+    trigger-mode: "season"
+    priority: 10
+    cooldown-seconds: 90
+    chance-percent: 35
+    enabled: true
+    description: "烈日炎炎：白天体温快速上升，沙漠出现中暑效果，水消耗加快。"
+    effects:
+      - "POTION:SLOWNESS:0:12"
+      - "PARTICLE:FLAME:10:0.4:0.3:0.4"
+      - "MESSAGE:§6烈日炙烤大地，记得补充水分并避开沙漠。"
+
+  summer-clear-sky:
+    type: "SUMMER_CLEAR_SKY"
+    season: "SUMMER"
+    trigger-mode: "season"
+    priority: 8
+    cooldown-seconds: 100
+    chance-percent: 30
+    enabled: true
+    description: "盛夏晴空：连续晴天，作物成长速度提升，蜜蜂生成率提高。"
+    effects:
+      - "POTION:HASTE:0:20"
+      - "PARTICLE:HAPPY_VILLAGER:20:0.8:0.5:0.8"
+      - "MESSAGE:§e盛夏晴空万里，农作物与蜂群都格外活跃。"
+
+  meteor-night:
+    type: "METEOR_NIGHT"
+    season: "SUMMER"
+    trigger-mode: "season"
+    priority: 7
+    cooldown-seconds: 140
+    chance-percent: 20
+    enabled: true
+    description: "流星之夜：夜晚掉落星光粒子，稀有矿物刷新率提升，可触发隐藏宝箱。"
+    effects:
+      - "PARTICLE:END_ROD:36:1.2:1.2:1.2"
+      - "SOUND:ENTITY_FIREWORK_ROCKET_TWINKLE:0.8:1.2"
+      - "MESSAGE:§d流星划过夜空，据说地下的稀有矿物也在闪烁。"
+
+  thunderstorm-season:
+    type: "THUNDERSTORM_SEASON"
+    season: "SUMMER"
+    trigger-mode: "season"
+    priority: 6
+    cooldown-seconds: 120
+    chance-percent: 25
+    enabled: true
+    description: "雷暴季：雷雨概率增加，苦力怕强化，避雷针更活跃。"
+    effects:
+      - "PARTICLE:ELECTRIC_SPARK:24:0.8:0.8:0.8"
+      - "SOUND:ENTITY_LIGHTNING_BOLT_THUNDER:0.7:1.0"
+      - "MESSAGE:§9雷暴季来临，避雷针与怪物都变得不安分。"
+
+autumn-events:
+  harvest-season:
+    type: "HARVEST_SEASON"
+    season: "AUTUMN"
+    trigger-mode: "season"
+    priority: 10
+    cooldown-seconds: 100
+    chance-percent: 35
+    enabled: true
+    description: "丰收时节：小麦/胡萝卜成长速度提升，村民交易价格降低，动物掉落增加。"
+    effects:
+      - "POTION:HASTE:0:20"
+      - "PARTICLE:COMPOSTER:24:0.8:0.6:0.8"
+      - "MESSAGE:§6丰收时节到了，田地、村庄与牧场都迎来好收成。"
+
+  falling-leaves:
+    type: "FALLING_LEAVES"
+    season: "AUTUMN"
+    trigger-mode: "season"
+    priority: 8
+    cooldown-seconds: 80
+    chance-percent: 35
+    enabled: true
+    description: "落叶纷飞：树叶粒子效果，森林雾气增强，狼群生成率提高。"
+    effects:
+      - "PARTICLE:FALLING_DUST:28:1.0:0.8:1.0"
+      - "SOUND:BLOCK_GRASS_BREAK:0.5:0.8"
+      - "MESSAGE:§e落叶纷飞，森林深处的雾气与狼嚎一同浮现。"
+
+  autumn-rain:
+    type: "AUTUMN_RAIN"
+    season: "AUTUMN"
+    trigger-mode: "season"
+    priority: 7
+    cooldown-seconds: 100
+    chance-percent: 30
+    enabled: true
+    description: "秋雨连绵：长时间降雨，河流水位视觉增强，夜晚更容易刷怪。"
+    effects:
+      - "PARTICLE:FALLING_WATER:28:1.0:0.8:1.0"
+      - "POTION:SLOWNESS:0:10"
+      - "MESSAGE:§9秋雨连绵，夜晚的阴影似乎更加密集。"
+
+  pumpkin-festival:
+    type: "PUMPKIN_FESTIVAL"
+    season: "AUTUMN"
+    trigger-mode: "season"
+    priority: 6
+    cooldown-seconds: 130
+    chance-percent: 25
+    enabled: true
+    description: "南瓜庆典：南瓜大量生成，怪物刷新，特殊糖果掉落。"
+    effects:
+      - "PARTICLE:WITCH:24:0.8:0.8:0.8"
+      - "SOUND:ENTITY_WITCH_CELEBRATE:0.6:1.0"
+      - "MESSAGE:§6南瓜庆典开始了，怪物和糖果都藏在夜色里。"
+
+winter-events:
+  heavy-snow:
+    type: "HEAVY_SNOW"
+    season: "WINTER"
+    trigger-mode: "season"
+    priority: 10
+    cooldown-seconds: 90
+    chance-percent: 35
+    enabled: true
+    description: "大雪纷飞：地面积雪，水结冰，玩家移动减速。"
+    effects:
+      - "POTION:SLOWNESS:0:15"
+      - "PARTICLE:SNOWFLAKE:32:1.0:0.8:1.0"
+      - "MESSAGE:§f大雪纷飞，脚下的积雪让道路变得难行。"
+
+  extreme-cold-night:
+    type: "EXTREME_COLD_NIGHT"
+    season: "WINTER"
+    trigger-mode: "season"
+    priority: 8
+    cooldown-seconds: 120
+    chance-percent: 25
+    enabled: true
+    description: "极寒之夜：夜晚持续掉温，玩家可能冻伤，火把附近获得保暖。"
+    effects:
+      - "DAMAGE:1.0"
+      - "SCREEN_FREEZE:40"
+      - "MESSAGE:§b极寒之夜降临，靠近火把才能稍稍回暖。"
+
+  frost-morning-fog:
+    type: "FROST_MORNING_FOG"
+    season: "WINTER"
+    trigger-mode: "season"
+    priority: 7
+    cooldown-seconds: 100
+    chance-percent: 30
+    enabled: true
+    description: "冰霜晨雾：清晨生成雾气，视野距离降低，冰原怪物增强。"
+    effects:
+      - "PARTICLE:CLOUD:30:1.0:0.8:1.0"
+      - "POTION:BLINDNESS:0:8"
+      - "MESSAGE:§7冰霜晨雾笼罩大地，远处的轮廓变得模糊。"
+
+  winter-celebration:
+    type: "WINTER_CELEBRATION"
+    season: "WINTER"
+    trigger-mode: "season"
+    priority: 6
+    cooldown-seconds: 140
+    chance-percent: 22
+    enabled: true
+    description: "冬日庆典：礼物箱刷新，烟花事件开启。"
+    effects:
+      - "PARTICLE:FIREWORK:28:0.8:1.0:0.8"
+      - "SOUND:ENTITY_FIREWORK_ROCKET_LAUNCH:0.8:1.1"
+      - "MESSAGE:§c冬日庆典开启，礼物箱与烟花点亮雪夜。"

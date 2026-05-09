@@ -1,0 +1,13 @@
+{
+  "id": "2df1b0a4-8693-4ee5-87e7-3f46bb54990a",
+  "title": "论坛介绍与插件功能详解",
+  "conversation_type": "agent",
+  "created_at": 1778294082,
+  "updated_at": 1778304898,
+  "status": "active",
+  "token_usage": {
+    "total_prompt": 0,
+    "total_completion": 0,
+    "total_cost_usd": 0.0
+  }
+}

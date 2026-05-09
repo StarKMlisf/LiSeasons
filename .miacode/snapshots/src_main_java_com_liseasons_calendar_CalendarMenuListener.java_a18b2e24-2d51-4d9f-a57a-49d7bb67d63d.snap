@@ -1,0 +1,99 @@
+package com.liseasons.calendar;
+
+import com.liseasons.LISeasonsPlugin;
+import com.liseasons.config.CalendarConfig;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+
+public final class CalendarMenuListener implements Listener {
+    private final LISeasonsPlugin plugin;
+
+    public CalendarMenuListener(LISeasonsPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getInventory().getHolder() instanceof CalendarMenuHolder holder)) {
+            return;
+        }
+        event.setCancelled(true);
+
+        if (!(event.getWhoClicked() instanceof Player player)) {
+            return;
+        }
+
+        int slot = event.getRawSlot();
+        CalendarConfig config = this.plugin.getLiConfig().calendarConfig();
+
+        if (slot == layoutSlot(config, 'C')) {
+            player.closeInventory();
+            return;
+        }
+        CalendarPage layoutPage = layoutPageAt(config, slot);
+        if (layoutPage != null && layoutPage != holder.page()) {
+            this.plugin.getCalendarMenu().open(player, layoutPage, false);
+            return;
+        }
+
+        if (holder.page() == CalendarPage.OVERVIEW) {
+            if (slot == config.slotForOverview("month")) {
+                this.plugin.getCalendarMenu().open(player, CalendarPage.MONTH_TERMS, false);
+                return;
+            }
+            if (slot == config.slotForOverview("term")) {
+                this.plugin.getCalendarMenu().open(player, CalendarPage.YEAR_TERMS, false);
+                return;
+            }
+            if (slot == config.slotForOverview("temperature")) {
+                this.plugin.getCalendarMenu().open(player, CalendarPage.TEMPERATURE, false);
+                return;
+            }
+        }
+
+        if (slot == config.slotForNavigation("overview") && holder.page() != CalendarPage.OVERVIEW) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.OVERVIEW, false);
+            return;
+        }
+        if (slot == config.slotForNavigation("close")) {
+            player.closeInventory();
+            return;
+        }
+        if (slot == config.slotForNavigation("month-terms") && holder.page() != CalendarPage.MONTH_TERMS) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.MONTH_TERMS, false);
+            return;
+        }
+        if (slot == config.slotForNavigation("year-terms") && holder.page() != CalendarPage.YEAR_TERMS) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.YEAR_TERMS, false);
+            return;
+        }
+        if (slot == config.slotForNavigation("temperature") && holder.page() != CalendarPage.TEMPERATURE) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.TEMPERATURE, false);
+            return;
+        }
+        if (slot == config.slotForNavigation("season-events") && holder.page() != CalendarPage.SEASON_EVENTS) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.SEASON_EVENTS, false);
+            return;
+        }
+        if (slot == config.slotForNavigation("festivals") && holder.page() != CalendarPage.FESTIVALS) {
+            this.plugin.getCalendarMenu().open(player, CalendarPage.FESTIVALS, false);
+            return;
+        }
+
+        CalendarConfig.PaginationConfig pagination = config.pagination();
+        if (pagination != null && pagination.previous() != null
+                && slot == pagination.previous().slot()
+                && (holder.page() == CalendarPage.SEASON_EVENTS || holder.page() == CalendarPage.FESTIVALS)) {
+            this.plugin.getCalendarMenu().open(player, holder.page(), false, holder.pageIndex() - 1);
+            return;
+        }
+        if (pagination != null && pagination.next() != null
+                && slot == pagination.next().slot()
+                && (holder.page() == CalendarPage.SEASON_EVENTS || holder.page() == CalendarPage.FESTIVALS)) {
+            this.plugin.getCalendarMenu().open(player, holder.page(), false, holder.pageIndex() + 1);
+        }
+    }
+}
+

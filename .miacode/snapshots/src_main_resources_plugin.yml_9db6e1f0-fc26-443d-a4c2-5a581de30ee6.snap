@@ -1,0 +1,23 @@
+name: LISeasons
+version: 1.0.6
+main: com.liseasons.LISeasonsPlugin
+api-version: '1.21'
+folia-supported: true
+authors: [kmian]
+description: 轻量四季与二十四节气插件
+softdepend: [CustomCrops, PlaceholderAPI]
+
+commands:
+  seasons:
+    description: LISeasons 主指令
+    usage: /seasons <help|info|calendar|reload|set|next|auto>
+    permission: liseasons.player
+    aliases: [season]
+
+permissions:
+  liseasons.player:
+    description: 查询季节与节气信息
+    default: true
+  liseasons.admin:
+    description: 管理 LISeasons
+    default: op

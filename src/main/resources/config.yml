@@ -1,0 +1,193 @@
+# LISeasons 主配置
+# 这份配置尽量保持“慢一点、轻一点”，适合养老服日常运行
+
+time:
+  # 是否优先按现实公历日期切换节气
+  use-gregorian-trigger: true
+  # 是否把主世界时间同步到现实时间
+  # 默认关闭。打开后会关闭原版昼夜循环，并按现实时间设置游戏时间
+  sync-real-time: false
+  # 现实时间同步检查间隔，单位为秒
+  real-time-sync-interval-seconds: 1
+  # 自动刷新间隔，单位为秒
+  # 不建议太快，像村口散步一样慢悠悠即可
+  refresh-interval-seconds: 60
+  # 四季开始日期
+  # 参考你给的 RealisticSeasons 服内规则：
+  # 春 3月4日、夏 6月4日、秋 9月4日、冬 12月4日
+  season-start-dates:
+    spring: "03-04"
+    summer: "06-04"
+    autumn: "09-04"
+    winter: "12-04"
+  # 当关闭公历触发时，按游戏天数循环四季
+  season-duration-days:
+    spring: 24
+    summer: 24
+    autumn: 24
+    winter: 24
+  # 24 节气默认公历日期
+  gregorian-dates:
+    lichun: "02-04"
+    yushui: "02-19"
+    jingzhe: "03-06"
+    chunfen: "03-21"
+    qingming: "04-05"
+    guyu: "04-20"
+    lixia: "05-06"
+    xiaoman: "05-21"
+    mangzhong: "06-06"
+    xiazhi: "06-21"
+    xiaoshu: "07-07"
+    dashu: "07-23"
+    liqiu: "08-08"
+    chushu: "08-23"
+    bailu: "09-08"
+    qiufen: "09-23"
+    hanlu: "10-08"
+    shuangjiang: "10-24"
+    lidong: "11-08"
+    xiaoxue: "11-22"
+    daxue: "12-07"
+    dongzhi: "12-22"
+    xiaohan: "01-05"
+    dahan: "01-20"
+
+calendar:
+  # 日历菜单标题，支持 MiniMessage 渐变色
+  title: "<gradient:#7fd37f:#f7c873>桃源四季历</gradient>"
+  # 菜单大小，必须是 9 的倍数
+  size: 27
+
+temperature:
+  # 体温系统已迁移到独立文件 `temperature.yml`
+  # 这里仅保留占位说明，方便你翻配置时不迷路
+  config-file: "temperature.yml"
+
+worlds:
+  # 是否默认启用全部世界
+  enable-all: false
+  # 指定启用的世界列表
+  allowed:
+    - world
+  # 指定禁用的世界列表
+  denied:
+    - world_nether
+    - world_the_end
+
+messages:
+  # 节气或季节变化时是否广播
+  broadcast-change: true
+  # 玩家加入时是否提示当前季节
+  join-notify: true
+
+effects:
+  # 轻量版先只保留切换提示与最低限度的视觉反馈
+  change-particle:
+    enable: false
+    particle: HAPPY_VILLAGER
+    count: 8
+  change-sound:
+    enable: true
+    sound: BLOCK_AMETHYST_BLOCK_CHIME
+    volume: 0.8
+    pitch: 1.0
+
+integration:
+  customcrops:
+    # 若服务器装有 CustomCrops，则尝试注册季节提供器
+    enable: true
+
+visual-effects:
+  # 视觉特效刷新间隔，单位 tick
+  interval-ticks: 40
+  # 视觉特效在玩家附近搜索的半径
+  search-radius: 12
+  aurora:
+    # 冬季夜晚极光
+    enable: true
+    chance-percent: 40
+  blizzard:
+    # 冬季暴风雪与积雪
+    enable: true
+    # 每次刷新尝试铺雪的概率
+    snow-placement-chance: 20
+  falling-leaves:
+    # 树叶飘落特效
+    enable: true
+  autumn-leaf-color:
+    # 秋季是否把玩家附近的桦树、针叶林和樱花叶分批染成暖橙色
+    enable: true
+    # 玩家周围扫描半径，单位方块。建议 8-14
+    radius: 10
+    # 每名玩家每次刷新最多替换多少个叶子方块。建议 12-48
+    budget-per-player: 24
+  spring-cherry-leaf:
+    # 春季是否将玩家视角的橡树树叶虚拟显示为樱花树叶
+    enable: true
+  tree-snow:
+    # 冬季树枝落雪特效
+    enable: true
+  apple-drop:
+    # 夏季橡树落苹果
+    enable: true
+    # 每次刷新掉落苹果的概率
+    chance-percent: 8
+
+season-effects:
+  # 这里只放“季节规则”，不再负责体温公式
+  # 体温的详细规则请到 temperature.yml
+  # 春季：气候恢复正常，无遮盖作物略快
+  spring:
+    uncovered-crop-growth-multiplier: 1.25
+    uncovered-crop-stop: false
+    rain-chance: 45
+    thunder-chance: 6
+  # 夏季：无遮盖作物生长明显加快，但整体更干热
+  summer:
+    uncovered-crop-growth-multiplier: 2.0
+    uncovered-crop-stop: false
+    rain-chance: 25
+    thunder-chance: 12
+  # 秋季：整体回归平和，作物正常慢慢长
+  autumn:
+    uncovered-crop-growth-multiplier: 1.0
+    uncovered-crop-stop: false
+    rain-chance: 30
+    thunder-chance: 4
+  # 冬季：无遮盖作物停止生长，降水减少
+  winter:
+    uncovered-crop-growth-multiplier: 1.0
+    uncovered-crop-stop: true
+    rain-chance: 10
+    thunder-chance: 0
+
+season-world-rules:
+  water-cycle:
+    # 是否启用“冬冻春融”
+    # 只会在玩家附近慢慢检查，不会满世界扫区块
+    enable: true
+    # 检查间隔，单位 tick
+    interval-ticks: 40
+    # 以玩家为中心的随机检查半径
+    search-radius: 6
+    # 冬季露天静水结冰概率
+    winter-freeze-chance-percent: 35
+    # 春季露天冰雪融化概率
+    spring-melt-chance-percent: 60
+    # 季节切换到春季时，玩家周围加入融雪队列的区块半径
+    transition-melt-radius-chunks: 6
+    # 春季过渡融雪每次最多处理的方块数，越大融化越快但压力越高
+    transition-melt-budget-per-tick: 512
+    # 这些群系不参与露天静水结冰
+    # 用关键词匹配即可，适合海洋和河流群系
+    exempt-biomes:
+      - ocean
+      - river
+  mob-rules:
+    # 是否启用季节生物替换
+    enable: true
+    # 夏季热带群系里，自然生成的僵尸改为尸壳的概率
+    summer-zombie-to-husk-chance-percent: 70
+    # 冬季自然生成的骷髅改为流浪者的概率
+    winter-skeleton-to-stray-chance-percent: 85

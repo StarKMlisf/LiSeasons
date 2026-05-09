@@ -1,0 +1,3 @@
+com\liseasons\festival\FestivalManagerTest.class
+com\liseasons\integration\SeasonEventAndFestivalIntegrationTest.class
+com\liseasons\event\SeasonEventManagerTest.class

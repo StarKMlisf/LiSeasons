@@ -1,0 +1,99 @@
+package com.liseasons.integration;
+
+import com.liseasons.event.SeasonEventConfig;
+import com.liseasons.event.SeasonEventType;
+import com.liseasons.festival.FestivalConfig;
+import com.liseasons.festival.FestivalType;
+import com.liseasons.festival.FestivalType.FestivalCategory;
+import com.liseasons.season.Season;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * 季节事件与节日系统集成测试
+ */
+public class SeasonEventAndFestivalIntegrationTest {
+
+    @Test
+    public void testSeasonEventAndFestivalCoexistence() {
+        SeasonEventConfig eventConfig = new SeasonEventConfig(
+                "spring-fair-weather",
+                SeasonEventType.FAIR_WEATHER,
+                Season.SPRING,
+                15.0,
+                "above",
+                20.0,
+                1,
+                5000,
+                100.0,
+                "春季晴朗测试事件",
+                List.of("PARTICLE:HAPPY_VILLAGER:10:0.5:0.5:0.5"),
+                true
+        );
+
+        FestivalConfig festivalConfig = new FestivalConfig(
+                "spring-festival",
+                FestivalType.SPRING_FESTIVAL,
+                FestivalType.SPRING_FESTIVAL.getDate(),
+                FestivalType.SPRING_FESTIVAL.getDisplayName(),
+                FestivalCategory.TRADITIONAL,
+                "春节默认测试配置",
+                true,
+                10
+        );
+
+        assertEquals(Season.SPRING, eventConfig.season());
+        assertEquals(FestivalType.SPRING_FESTIVAL, festivalConfig.type());
+    }
+
+    @Test
+    public void testSeasonEventTypeCoverage() {
+        assertEquals(13, SeasonEventType.values().length, "应该有13种季节事件类型");
+        assertEquals(4, SeasonEventType.getBySeason(Season.SPRING).size(), "春季应该有4种可用事件类型");
+        assertEquals(3, SeasonEventType.getBySeason(Season.SUMMER).size(), "夏季应该有3种可用事件类型");
+        assertEquals(4, SeasonEventType.getBySeason(Season.AUTUMN).size(), "秋季应该有4种可用事件类型");
+        assertEquals(4, SeasonEventType.getBySeason(Season.WINTER).size(), "冬季应该有4种可用事件类型");
+    }
+
+    @Test
+    public void testSharedSeasonEventTypes() {
+        assertTrue(SeasonEventType.FAIR_WEATHER.supportsSeason(Season.SPRING));
+        assertTrue(SeasonEventType.FAIR_WEATHER.supportsSeason(Season.SUMMER));
+        assertTrue(SeasonEventType.SPRING_BREEZE.supportsSeason(Season.SPRING));
+        assertTrue(SeasonEventType.SPRING_BREEZE.supportsSeason(Season.AUTUMN));
+    }
+
+    @Test
+    public void testFestivalCoverageByCategories() {
+        assertEquals(13, FestivalType.getByCategory(FestivalCategory.TRADITIONAL).size());
+        assertEquals(7, FestivalType.getByCategory(FestivalCategory.LEGAL_HOLIDAY).size());
+        assertEquals(9, FestivalType.getByCategory(FestivalCategory.GREGORIAN).size());
+        assertEquals(9, FestivalType.getByCategory(FestivalCategory.SERVER_CUSTOM).size());
+        assertEquals(38, FestivalType.values().length, "应该有38个节日");
+    }
+
+    @Test
+    public void testSeasonEventTriggerModes() {
+        SeasonEventConfig rangeConfig = new SeasonEventConfig(
+                "test-range",
+                SeasonEventType.HOT_SUN,
+                Season.SUMMER,
+                25.0,
+                "range",
+                35.0,
+                1,
+                5000,
+                100.0,
+                "高温区间测试事件",
+                List.of(),
+                true
+        );
+
+        assertTrue(rangeConfig.triggersAt(25.0));
+        assertTrue(rangeConfig.triggersAt(30.0));
+        assertFalse(rangeConfig.triggersAt(35.1));
+    }
+}

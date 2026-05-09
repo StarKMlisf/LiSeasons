@@ -1,0 +1,464 @@
+package com.liseasons.config;
+
+import com.liseasons.LISeasonsPlugin;
+import com.liseasons.event.SeasonEventConfig;
+import com.liseasons.event.SeasonEventConfigLoader;
+import com.liseasons.festival.FestivalConfig;
+import com.liseasons.festival.FestivalConfigLoader;
+import com.liseasons.season.Season;
+import com.liseasons.season.SolarTerm;
+import com.liseasons.visual.BiomeVisualColors;
+import com.liseasons.visual.SeasonBiomeColorConfig;
+import java.io.File;
+import java.time.MonthDay;
+import java.time.format.DateTimeParseException;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+public final class ConfigManager {
+    private final LISeasonsPlugin plugin;
+    private PluginConfig pluginConfig;
+
+    public ConfigManager(LISeasonsPlugin plugin) {
+        this.plugin = plugin;
+        this.pluginConfig = load();
+    }
+
+    public PluginConfig reload() {
+        this.plugin.reloadConfig();
+        this.plugin.reloadMessagesConfig();
+        this.pluginConfig = load();
+        return this.pluginConfig;
+    }
+
+    public PluginConfig getConfig() {
+        return this.pluginConfig;
+    }
+
+    private PluginConfig load() {
+        Map<Season, Integer> seasonDurations = new EnumMap<>(Season.class);
+        for (Season season : Season.values()) {
+            int value = this.plugin.getConfig().getInt("time.season-duration-days." + season.key(), 24);
+            seasonDurations.put(season, Math.max(1, value));
+        }
+
+        Map<Season, MonthDay> seasonStartDates = new EnumMap<>(Season.class);
+        seasonStartDates.put(Season.SPRING, parseMonthDay(this.plugin.getConfig().getString("time.season-start-dates.spring"), MonthDay.of(3, 4)));
+        seasonStartDates.put(Season.SUMMER, parseMonthDay(this.plugin.getConfig().getString("time.season-start-dates.summer"), MonthDay.of(6, 4)));
+        seasonStartDates.put(Season.AUTUMN, parseMonthDay(this.plugin.getConfig().getString("time.season-start-dates.autumn"), MonthDay.of(9, 4)));
+        seasonStartDates.put(Season.WINTER, parseMonthDay(this.plugin.getConfig().getString("time.season-start-dates.winter"), MonthDay.of(12, 4)));
+
+        Map<SolarTerm, MonthDay> gregorianDates = new EnumMap<>(SolarTerm.class);
+        ConfigurationSection dateSection = this.plugin.getConfig().getConfigurationSection("time.gregorian-dates");
+        for (SolarTerm term : SolarTerm.values()) {
+            String raw = dateSection == null ? null : dateSection.getString(term.key());
+            gregorianDates.put(term, parseMonthDay(raw, term.defaultDate()));
+        }
+
+        Map<Season, SeasonEffectConfig> seasonEffects = new EnumMap<>(Season.class);
+        for (Season season : Season.values()) {
+            String basePath = "season-effects." + season.key();
+            seasonEffects.put(season, new SeasonEffectConfig(
+                    this.plugin.getConfig().getDouble(basePath + ".uncovered-crop-growth-multiplier", 1.0D),
+                    this.plugin.getConfig().getBoolean(basePath + ".uncovered-crop-stop", false),
+                    this.plugin.getConfig().getInt(basePath + ".rain-chance", 20),
+                    this.plugin.getConfig().getInt(basePath + ".thunder-chance", 0)
+            ));
+        }
+
+        SeasonWorldRulesConfig seasonWorldRulesConfig = new SeasonWorldRulesConfig(
+                new SeasonWaterCycleConfig(
+                        this.plugin.getConfig().getBoolean("season-world-rules.water-cycle.enable", true),
+                        this.plugin.getConfig().getLong("season-world-rules.water-cycle.interval-ticks", 40L),
+                        this.plugin.getConfig().getInt("season-world-rules.water-cycle.search-radius", 6),
+                        this.plugin.getConfig().getInt("season-world-rules.water-cycle.winter-freeze-chance-percent", 35),
+                        this.plugin.getConfig().getInt("season-world-rules.water-cycle.spring-melt-chance-percent", 30),
+                        this.plugin.getConfig().getInt("season-world-rules.water-cycle.transition-melt-radius-chunks", 6),
+                        this.plugin.getConfig().getInt("season-world-rules.water-cycle.transition-melt-budget-per-tick", 512),
+                        this.plugin.getConfig().getStringList("season-world-rules.water-cycle.exempt-biomes")
+                ),
+                new SeasonMobConfig(
+                        this.plugin.getConfig().getBoolean("season-world-rules.mob-rules.enable", true),
+                        this.plugin.getConfig().getInt("season-world-rules.mob-rules.summer-zombie-to-husk-chance-percent", 70),
+                        this.plugin.getConfig().getInt("season-world-rules.mob-rules.winter-skeleton-to-stray-chance-percent", 85)
+                )
+        );
+
+        CalendarConfig calendarConfig = new CalendarConfig(
+                this.plugin.getConfig().getString("calendar.title", "<gradient:#7fd37f:#f7c873>桃源四季历</gradient>"),
+                this.plugin.getConfig().getInt("calendar.size", 27)
+        );
+        TemperatureConfig temperatureConfig = loadTemperatureConfig();
+        VisualEffectsConfig visualEffectsConfig = new VisualEffectsConfig(
+                this.plugin.getConfig().getLong("visual-effects.interval-ticks", 40L),
+                this.plugin.getConfig().getInt("visual-effects.search-radius", 12),
+                this.plugin.getConfig().getBoolean("visual-effects.aurora.enable", true),
+                this.plugin.getConfig().getInt("visual-effects.aurora.chance-percent", 40),
+                this.plugin.getConfig().getBoolean("visual-effects.blizzard.enable", true),
+                this.plugin.getConfig().getInt("visual-effects.blizzard.snow-placement-chance", 20),
+                this.plugin.getConfig().getBoolean("visual-effects.falling-leaves.enable", true),
+                this.plugin.getConfig().getBoolean("visual-effects.autumn-leaf-color.enable", true),
+                this.plugin.getConfig().getInt("visual-effects.autumn-leaf-color.radius", 10),
+                this.plugin.getConfig().getInt("visual-effects.autumn-leaf-color.budget-per-player", 24),
+                this.plugin.getConfig().getBoolean("visual-effects.spring-cherry-leaf.enable", true),
+                this.plugin.getConfig().getBoolean("visual-effects.tree-snow.enable", true),
+                this.plugin.getConfig().getBoolean("visual-effects.apple-drop.enable", true),
+                this.plugin.getConfig().getInt("visual-effects.apple-drop.chance-percent", 8)
+        );
+        SeasonBiomeColorConfig biomeColorConfig = loadBiomeColorConfig();
+        
+        // 加载季节事件配置
+        List<com.liseasons.event.SeasonEventConfig> seasonEventConfigs = loadSeasonEventConfigs();
+        
+        // 加载节日配置
+        List<com.liseasons.festival.FestivalConfig> festivalConfigs = loadFestivalConfigs();
+
+        long refreshIntervalSeconds = Math.max(10L, this.plugin.getConfig().getLong("time.refresh-interval-seconds", 60L));
+        long realTimeSyncIntervalSeconds = Math.max(1L, this.plugin.getConfig().getLong("time.real-time-sync-interval-seconds", 1L));
+        boolean enableAll = this.plugin.getConfig().getBoolean("worlds.enable-all", false);
+        List<String> allowed = this.plugin.getConfig().getStringList("worlds.allowed");
+        List<String> denied = this.plugin.getConfig().getStringList("worlds.denied");
+
+        return new PluginConfig(
+                this.plugin.getConfig().getBoolean("time.use-gregorian-trigger", true),
+                refreshIntervalSeconds * 20L,
+                this.plugin.getConfig().getBoolean("time.sync-real-time", false),
+                realTimeSyncIntervalSeconds * 20L,
+                seasonDurations,
+                seasonStartDates,
+                gregorianDates,
+                seasonEffects,
+                seasonWorldRulesConfig,
+                calendarConfig,
+                temperatureConfig,
+                visualEffectsConfig,
+                biomeColorConfig,
+                enableAll,
+                allowed,
+                denied,
+                this.plugin.getConfig().getBoolean("messages.broadcast-change", true),
+                this.plugin.getConfig().getBoolean("messages.join-notify", true),
+                this.plugin.getConfig().getBoolean("effects.change-particle.enable", false),
+                this.plugin.getConfig().getString("effects.change-particle.particle", "HAPPY_VILLAGER"),
+                Math.max(0, this.plugin.getConfig().getInt("effects.change-particle.count", 8)),
+                this.plugin.getConfig().getBoolean("effects.change-sound.enable", true),
+                this.plugin.getConfig().getString("effects.change-sound.sound", "BLOCK_AMETHYST_BLOCK_CHIME"),
+                (float) this.plugin.getConfig().getDouble("effects.change-sound.volume", 0.8D),
+                (float) this.plugin.getConfig().getDouble("effects.change-sound.pitch", 1.0D),
+                this.plugin.getConfig().getBoolean("integration.customcrops.enable", true),
+                seasonEventConfigs,
+                festivalConfigs
+        );
+    }
+
+    private TemperatureConfig loadTemperatureConfig() {
+        File file = new File(this.plugin.getDataFolder(), "temperature.yml");
+        FileConfiguration temperatureFile = YamlConfiguration.loadConfiguration(file);
+
+        Map<Season, Double> seasonBaseTemperatures = new EnumMap<>(Season.class);
+        seasonBaseTemperatures.put(Season.SPRING, temperatureFile.getDouble("season-base-temperature.spring", 16.0D));
+        seasonBaseTemperatures.put(Season.SUMMER, temperatureFile.getDouble("season-base-temperature.summer", 26.0D));
+        seasonBaseTemperatures.put(Season.AUTUMN, temperatureFile.getDouble("season-base-temperature.autumn", 18.0D));
+        seasonBaseTemperatures.put(Season.WINTER, temperatureFile.getDouble("season-base-temperature.winter", 2.0D));
+        Map<Season, TemperatureRangeConfig> seasonBaseRanges = loadSeasonBaseRanges(temperatureFile);
+        Map<String, Double> solarTermModifiers = loadDoubleSection(temperatureFile, "solar-term-modifier");
+        solarTermModifiers.remove("enable");
+
+        Map<String, Double> biomeOverrides = loadDoubleSection(temperatureFile, "biome-overrides");
+        Map<String, Double> armorWarmth = loadDoubleSection(temperatureFile, "armor");
+        armorWarmth.remove("leather-disabled-above");
+        Map<String, Double> heldItemTemperatureModifiers = loadDoubleSection(temperatureFile, "items.held");
+
+        TemperatureConditionConfig conditionConfig = new TemperatureConditionConfig(
+                temperatureFile.getDouble("condition.shade", -1.0D),
+                temperatureFile.getDouble("condition.night", -2.0D),
+                temperatureFile.getDouble("condition.night-min", temperatureFile.getDouble("condition.night", -2.0D)),
+                temperatureFile.getDouble("condition.day-max", 2.0D),
+                temperatureFile.getDouble("condition.rain", -2.5D),
+                temperatureFile.getDouble("condition.thunder", -4.0D),
+                temperatureFile.getDouble("condition.underground", 1.5D),
+                temperatureFile.getDouble("condition.high-altitude-start-y", 120.0D),
+                temperatureFile.getDouble("condition.high-altitude", -3.0D),
+                temperatureFile.getDouble("condition.armor-per-piece", 1.0D),
+                temperatureFile.getDouble("condition.held-torch", 1.0D),
+                temperatureFile.getDouble("condition.held-soul-torch", -2.0D),
+                temperatureFile.getDouble("condition.held-lava-bucket", 5.0D),
+                temperatureFile.getDouble("condition.nearby-fire", 4.0D),
+                temperatureFile.getDouble("condition.nearby-soul-fire", -8.0D),
+                temperatureFile.getDouble("condition.nearby-campfire", 6.0D),
+                temperatureFile.getDouble("condition.nearby-soul-campfire", -6.0D),
+                temperatureFile.getDouble("condition.nearby-lava", 8.0D),
+                temperatureFile.getDouble("condition.nearby-ice", -3.0D),
+                temperatureFile.getDouble("condition.nearby-packed-ice", -4.0D),
+                temperatureFile.getDouble("condition.nearby-blue-ice", -8.0D),
+                Math.max(1, temperatureFile.getInt("condition.nearby-heat-range", 3)),
+                temperatureFile.getDouble("condition.water-default", -4.0D),
+                temperatureFile.getDouble("condition.water-winter", -10.0D),
+                temperatureFile.getDouble("condition.tropical-summer-day", 4.0D)
+        );
+
+        List<String> tropicalBiomes = temperatureFile.getStringList("tropical-biomes");
+
+        List<TemperatureEventConfig> events = new java.util.ArrayList<>();
+        ConfigurationSection eventSection = temperatureFile.getConfigurationSection("temperatureEvents");
+        if (eventSection != null) {
+            for (String key : eventSection.getKeys(false)) {
+                String basePath = "temperatureEvents." + key;
+                events.add(new TemperatureEventConfig(
+                        key,
+                        temperatureFile.getDouble(basePath + ".temperature", 0.0D),
+                        temperatureFile.getString(basePath + ".mode", temperatureFile.getDouble(basePath + ".temperature", 0.0D) >= 0.0D ? "above" : "below"),
+                        temperatureFile.getInt(basePath + ".priority", 0),
+                        Math.round(temperatureFile.getDouble(basePath + ".cooldown-seconds", temperatureFile.getDouble("temperature-event-cooldown-seconds", 5.0D)) * 1000.0D),
+                        temperatureFile.getStringList(basePath + ".effects")
+                ));
+            }
+        }
+
+        return new TemperatureConfig(
+                seasonBaseTemperatures,
+                "daily-random".equalsIgnoreCase(temperatureFile.getString("base-temperature.mode", "fixed")),
+                seasonBaseRanges,
+                temperatureFile.getBoolean("solar-term-modifier.enable", false),
+                solarTermModifiers,
+                temperatureFile.getDouble("biome-vanilla-scale", 5.0D),
+                biomeOverrides,
+                tropicalBiomes,
+                conditionConfig,
+                temperatureFile.getInt("display-decimals", 1),
+                temperatureFile.getBoolean("action-bar.enable", true),
+                temperatureFile.getLong("event-interval-ticks", 40L),
+                temperatureFile.getBoolean("temperatureEventsEnabled", true),
+                "highest-only".equalsIgnoreCase(temperatureFile.getString("temperature-event-mode", "highest-only")),
+                Math.round(temperatureFile.getDouble("temperature-event-cooldown-seconds", 5.0D) * 1000.0D),
+                temperatureFile.getDouble("body-temperature-step", 2.0D),
+                temperatureFile.getDouble("water.wetness-recovery-per-step", temperatureFile.getDouble("wetness-recovery-per-step", 0.2D)),
+                temperatureFile.getLong("water.wetness-recovery-interval-ticks", temperatureFile.getLong("wetness-recovery-interval-ticks", 40L)),
+                armorWarmth,
+                temperatureFile.getDouble("armor.leather-disabled-above", 25.0D),
+                heldItemTemperatureModifiers,
+                events
+        );
+    }
+
+    private Map<Season, TemperatureRangeConfig> loadSeasonBaseRanges(FileConfiguration temperatureFile) {
+        Map<Season, TemperatureRangeConfig> ranges = new EnumMap<>(Season.class);
+        for (Season season : Season.values()) {
+            String path = "base-temperature.season." + season.key();
+            ranges.put(season, new TemperatureRangeConfig(
+                    temperatureFile.getDouble(path + ".min", temperatureFile.getDouble("season-base-temperature." + season.key(), 18.0D)),
+                    temperatureFile.getDouble(path + ".max", temperatureFile.getDouble("season-base-temperature." + season.key(), 18.0D))
+            ));
+        }
+        return ranges;
+    }
+
+    private Map<String, Double> loadDoubleSection(FileConfiguration file, String path) {
+        Map<String, Double> values = new LinkedHashMap<>();
+        ConfigurationSection section = file.getConfigurationSection(path);
+        if (section == null) {
+            return values;
+        }
+        for (String key : section.getKeys(false)) {
+            if (section.isConfigurationSection(key)) {
+                continue;
+            }
+            values.put(key.toLowerCase(), section.getDouble(key));
+        }
+        return values;
+    }
+
+    private SeasonBiomeColorConfig loadBiomeColorConfig() {
+        File file = new File(this.plugin.getDataFolder(), "season-color.yml");
+        FileConfiguration colorFile = YamlConfiguration.loadConfiguration(file);
+
+        boolean enabled = colorFile.getBoolean("enable", true);
+        long intervalTicks = colorFile.getLong("interval-ticks", 60L);
+        int radius = colorFile.getInt("radius", 8);
+
+        Map<Season, Map<NamespacedKey, NamespacedKey>> allMappings = new EnumMap<>(Season.class);
+        ConfigurationSection seasonsSection = colorFile.getConfigurationSection("seasons");
+        if (seasonsSection != null) {
+            for (String seasonKey : seasonsSection.getKeys(false)) {
+                Season season = Season.fromKey(seasonKey).orElse(null);
+                if (season == null) {
+                    this.plugin.getLogger().warning("未知季节键名，跳过: " + seasonKey);
+                    continue;
+                }
+                ConfigurationSection biomeSection = seasonsSection.getConfigurationSection(seasonKey);
+                if (biomeSection == null) {
+                    continue;
+                }
+                Map<NamespacedKey, NamespacedKey> mappings = new LinkedHashMap<>();
+                for (String biomeKey : biomeSection.getKeys(false)) {
+                    String targetKey = biomeSection.getString(biomeKey);
+                    if (targetKey == null || targetKey.isBlank()) {
+                        continue;
+                    }
+                    NamespacedKey original = parseNamespacedKey(biomeKey);
+                    NamespacedKey target = parseNamespacedKey(targetKey);
+                    if (original != null && target != null) {
+                        mappings.put(original, target);
+                    }
+                }
+                allMappings.put(season, Collections.unmodifiableMap(mappings));
+            }
+        }
+
+        Map<Season, Map<NamespacedKey, BiomeVisualColors>> allVisuals = loadBiomeVisuals(colorFile);
+        Map<Season, NamespacedKey> spoofTargets = new EnumMap<>(Season.class);
+        ConfigurationSection spoofSeasonSection = colorFile.getConfigurationSection("biome-spoof.seasons");
+        if (spoofSeasonSection != null) {
+            for (String seasonKey : spoofSeasonSection.getKeys(false)) {
+                Season season = Season.fromKey(normalizeSeasonKey(seasonKey)).orElse(null);
+                NamespacedKey target = parseNamespacedKey(spoofSeasonSection.getString(seasonKey));
+                if (season != null && target != null) {
+                    spoofTargets.put(season, target);
+                }
+            }
+        }
+        putDefaultSpoofTargets(spoofTargets);
+        return new SeasonBiomeColorConfig(
+                enabled,
+                intervalTicks,
+                radius,
+                allMappings,
+                allVisuals,
+                colorFile.getBoolean("biome-spoof.enable", true),
+                colorFile.getInt("biome-spoof.radius-chunks", 8),
+                colorFile.getInt("biome-spoof.budget-chunks-per-tick", 8),
+                colorFile.getInt("biome-spoof.step-xz", 4),
+                colorFile.getInt("biome-spoof.step-y", 4),
+                spoofTargets
+        );
+    }
+
+    private void putDefaultSpoofTargets(Map<Season, NamespacedKey> spoofTargets) {
+        spoofTargets.putIfAbsent(Season.SPRING, NamespacedKey.minecraft("flower_forest"));
+        spoofTargets.putIfAbsent(Season.SUMMER, NamespacedKey.minecraft("plains"));
+        spoofTargets.putIfAbsent(Season.AUTUMN, NamespacedKey.minecraft("windswept_savanna"));
+        spoofTargets.putIfAbsent(Season.WINTER, NamespacedKey.minecraft("snowy_plains"));
+    }
+
+    private Map<Season, Map<NamespacedKey, BiomeVisualColors>> loadBiomeVisuals(FileConfiguration colorFile) {
+        Map<Season, Map<NamespacedKey, BiomeVisualColors>> allVisuals = new EnumMap<>(Season.class);
+        ConfigurationSection groupsSection = colorFile.getConfigurationSection("biome-visuals");
+        if (groupsSection == null) {
+            return allVisuals;
+        }
+
+        for (String groupKey : groupsSection.getKeys(false)) {
+            ConfigurationSection groupSection = groupsSection.getConfigurationSection(groupKey);
+            if (groupSection == null) {
+                continue;
+            }
+            List<NamespacedKey> biomes = groupSection.getStringList("biomes").stream()
+                    .map(this::parseNamespacedKey)
+                    .filter(java.util.Objects::nonNull)
+                    .toList();
+            ConfigurationSection seasonsSection = groupSection.getConfigurationSection("seasons");
+            if (biomes.isEmpty() || seasonsSection == null) {
+                continue;
+            }
+            for (String seasonKey : seasonsSection.getKeys(false)) {
+                Season season = Season.fromKey(normalizeSeasonKey(seasonKey)).orElse(null);
+                ConfigurationSection seasonSection = seasonsSection.getConfigurationSection(seasonKey);
+                if (season == null || seasonSection == null) {
+                    continue;
+                }
+                BiomeVisualColors colors = new BiomeVisualColors(
+                        parseHexColor(seasonSection.getString("sky")),
+                        parseHexColor(seasonSection.getString("water")),
+                        parseHexColor(seasonSection.getString("waterFog")),
+                        parseHexColor(seasonSection.getString("grass")),
+                        parseHexColor(seasonSection.getString("tree")),
+                        parseHexColor(seasonSection.getString("fog"))
+                );
+                if (!colors.hasAnyColor()) {
+                    continue;
+                }
+                Map<NamespacedKey, BiomeVisualColors> seasonVisuals = allVisuals.computeIfAbsent(season, ignored -> new LinkedHashMap<>());
+                for (NamespacedKey biome : biomes) {
+                    seasonVisuals.put(biome, colors);
+                }
+            }
+        }
+        return allVisuals;
+    }
+
+    private String normalizeSeasonKey(String seasonKey) {
+        return "fall".equalsIgnoreCase(seasonKey) ? "autumn" : seasonKey;
+    }
+
+    private Integer parseHexColor(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String normalized = raw.trim();
+        if (normalized.startsWith("#")) {
+            normalized = normalized.substring(1);
+        }
+        if (normalized.length() != 6) {
+            this.plugin.getLogger().warning("无法解析颜色配置: " + raw + "，请使用 6 位 HEX，例如 FFFFFF");
+            return null;
+        }
+        try {
+            return Integer.parseInt(normalized, 16);
+        } catch (NumberFormatException ex) {
+            this.plugin.getLogger().warning("无法解析颜色配置: " + raw + "，请使用 0-9 或 A-F");
+            return null;
+        }
+    }
+
+    private NamespacedKey parseNamespacedKey(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String normalized = raw.toLowerCase(java.util.Locale.ROOT);
+        return normalized.contains(":") ? NamespacedKey.fromString(normalized) : NamespacedKey.minecraft(normalized);
+    }
+
+    private MonthDay parseMonthDay(String raw, MonthDay fallback) {
+        if (raw == null || raw.isBlank()) {
+            return fallback;
+        }
+
+        try {
+            String[] split = raw.split("-");
+            if (split.length != 2) {
+                return fallback;
+            }
+            int month = Integer.parseInt(split[0]);
+            int day = Integer.parseInt(split[1]);
+            return MonthDay.of(month, day);
+        } catch (DateTimeParseException | IllegalArgumentException ex) {
+            this.plugin.getLogger().warning("无法解析节气日期配置: " + raw + "，将使用默认值 " + fallback);
+            return fallback;
+        }
+    }
+
+    /**
+     * 加载季节事件配置
+     */
+    private List<com.liseasons.event.SeasonEventConfig> loadSeasonEventConfigs() {
+        File file = new File(this.plugin.getDataFolder(), "season-events.yml");
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        return SeasonEventConfigLoader.loadSeasonEvents(config);
+    }
+
+    /**
+     * 加载节日配置
+     */
+    private List<com.liseasons.festival.FestivalConfig> loadFestivalConfigs() {
+        File file = new File(this.plugin.getDataFolder(), "festivals.yml");
+        FileConfiguration config = YamlConfiguration.loadConfiguration(file);
+        return FestivalConfigLoader.loadFestivals(config);
+    }
+}

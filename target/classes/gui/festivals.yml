@@ -1,0 +1,104 @@
+# LISeasons GUI 独立菜单配置：festivals
+# 该文件只控制 festivals 页面。layout 每行 9 个字符，空格表示不覆盖该槽位。
+# icons 中 type: content 表示动态内容占位；列表/节气/事件/节日会自动填入这些槽位，类似 TrMenu 的布局槽。
+
+menu:
+  title: "<gradient:#6b4b2a:#4f6b3c>桃源季节手账 · 节日纪念册</gradient>"
+  rows: 6
+  size: 54
+
+  layout:
+    - "BBBBTBBBB"
+    - "BAAAASSSB"
+    - "BAAAAWWWB"
+    - "BAAAAPPPB"
+    - "BBBBBBBBB"
+    - "P E C M Y"
+
+  icons:
+    B:
+      material: OAK_PLANKS
+      name: " "
+    A:
+      type: content
+      material: AIR
+      name: " "
+    T:
+      material: CLOCK
+      name: "&e&l<title>"
+      lore:
+        - "&7页面：&f<page>"
+        - "&7季节：&f<season>"
+        - "&7节气：&f<term>"
+    S:
+      type: season
+      season: spring
+      material: FLOWERING_AZALEA
+      name: "&a当前季节"
+      lore:
+        - "&7季节：&f<season>"
+        - "&7日期：&f<date>"
+    W:
+      type: temperature
+      material: CAMPFIRE
+      cold-material: SNOWBALL
+      hot-material: BLAZE_POWDER
+      name: "&c体感温度"
+      lore:
+        - "&7体感：&f<temperature>"
+        - "&7空气：&f<air>"
+        - "&7潮湿：&f<wetness>"
+    E:
+      type: page
+      page: season_events
+      material: BLAZE_ROD
+      active-material: LODESTONE
+      name: "&6季节告示板"
+      lore:
+        - "&7查看季节事件。"
+    F:
+      type: page
+      page: festivals
+      material: CAKE
+      active-material: LODESTONE
+      name: "&d节日纪念册"
+      lore:
+        - "&7查看节日记录。"
+    C:
+      type: close
+      material: BARRIER
+      name: "&4合上手账"
+      lore:
+        - "&7点击关闭菜单。"
+    M:
+      type: page
+      page: month_terms
+      material: FILLED_MAP
+      active-material: LODESTONE
+      name: "&a本月节气"
+      lore:
+        - "&7本月：&f<terms>"
+    Y:
+      type: page
+      page: year_terms
+      material: BOOKSHELF
+      active-material: LODESTONE
+      name: "&6全年节气"
+      lore:
+        - "&7查看二十四节气。"
+    P:
+      type: page
+      page: overview
+      material: WRITABLE_BOOK
+      active-material: LODESTONE
+      name: "&6农夫手账首页"
+      lore:
+        - "&7当前世界：&f<world>"
+    H:
+      type: page
+      page: temperature
+      material: CAMPFIRE
+      active-material: LODESTONE
+      name: "&c农事温度"
+      lore:
+        - "&7查看温度说明。"

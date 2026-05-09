@@ -1,0 +1,40 @@
+package com.liseasons.event;
+
+import com.liseasons.season.Season;
+import java.util.List;
+
+/**
+ * 季节事件配置
+ * 定义单个季节事件的触发条件和效果
+ */
+public record SeasonEventConfig(
+        String eventId,                    // 事件唯一ID
+        SeasonEventType type,              // 事件类型
+        Season season,                     // 所属季节
+        double triggerTemperature,         // 触发温度阈值
+        String triggerMode,                // 触发模式: "above" | "below" | "range"
+        double triggerTemperatureMax,      // 触发温度上限（仅range模式）
+        int priority,                      // 优先级（高优先级优先触发）
+        long cooldownMillis,               // 事件冷却时间（毫秒）
+        List<String> effects,              // 效果列表
+        boolean enabled                    // 是否启用
+) {
+    /**
+     * 检查温度是否满足触发条件
+     */
+    public boolean triggersAt(double temperature) {
+        return switch (triggerMode) {
+            case "above" -> temperature >= triggerTemperature;
+            case "below" -> temperature <= triggerTemperature;
+            case "range" -> temperature >= triggerTemperature && temperature <= triggerTemperatureMax;
+            default -> false;
+        };
+    }
+
+    /**
+     * 获取事件的显示名称
+     */
+    public String getDisplayName() {
+        return type.getDisplayName();
+    }
+}

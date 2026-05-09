@@ -1,0 +1,11 @@
+# LISeasons 1.0.17 更新说明
+
+## 优化
+
+- 新增普通体感变化提示过滤配置，温度变化幅度较小时不再发送聊天提示，减少刷屏。
+- `temperature.yml` 新增 `notice.enable`、`notice.cooldown-seconds`、`notice.min-temperature-delta` 配置项。
+- 普通体感变化提示现在会同时受冷却时间和最小温差阈值控制；温度事件效果仍按原有事件阈值独立触发。
+
+## 构建
+
+- 插件版本更新为 `1.0.17`。

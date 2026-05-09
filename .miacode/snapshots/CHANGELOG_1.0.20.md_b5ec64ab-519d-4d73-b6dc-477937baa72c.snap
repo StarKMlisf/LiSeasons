@@ -1,0 +1,21 @@
+# LISeasons 1.0.20 更新说明
+
+## 修复
+
+- 修复 `gui.yml` 中 `calendar.content-slots` 只有 `default`、`year-terms` 生效的问题。
+- 季节事件页、节日页现在会分别读取 `content-slots.season-events`、`content-slots.festivals`。
+- 本月节气页现在也支持 `content-slots.month-terms` 的列表槽位配置，不再只能使用 `start-slot` 连续摆放。
+
+## 优化
+
+- `gui.yml` 示例补全为统一的列表槽位格式：
+  - `default`
+  - `month-terms`
+  - `year-terms`
+  - `season-events`
+  - `festivals`
+- 分页数量会根据当前页面实际使用的槽位列表计算，避免修改不同页面槽位后分页异常。
+
+## 构建
+
+- 插件版本更新为 `1.0.20`。

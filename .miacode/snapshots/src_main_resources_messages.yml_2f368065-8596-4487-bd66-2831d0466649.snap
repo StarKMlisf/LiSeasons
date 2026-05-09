@@ -1,0 +1,230 @@
+# LISeasons 消息配置
+# 所有文本支持 MiniMessage。可用占位符会由代码按上下文替换，例如 <world>、<season>、<term>。
+prefix: "<gradient:#7fd37f:#f7c873>[LISeasons]</gradient> "
+
+season-names:
+  spring: "春季"
+  summer: "夏季"
+  autumn: "秋季"
+  winter: "冬季"
+
+solar-term-names:
+  lichun: "立春"
+  yushui: "雨水"
+  jingzhe: "惊蛰"
+  chunfen: "春分"
+  qingming: "清明"
+  guyu: "谷雨"
+  lixia: "立夏"
+  xiaoman: "小满"
+  mangzhong: "芒种"
+  xiazhi: "夏至"
+  xiaoshu: "小暑"
+  dashu: "大暑"
+  liqiu: "立秋"
+  chushu: "处暑"
+  bailu: "白露"
+  qiufen: "秋分"
+  hanlu: "寒露"
+  shuangjiang: "霜降"
+  lidong: "立冬"
+  xiaoxue: "小雪"
+  daxue: "大雪"
+  dongzhi: "冬至"
+  xiaohan: "小寒"
+  dahan: "大寒"
+
+command:
+  no-permission: "<red>你没有权限使用这个指令。</red>"
+  player-only: "<yellow>这个指令只能由玩家执行。</yellow>"
+  reloaded: "<green>配置已重新加载。</green>"
+  unknown-world: "<red>找不到这个世界。</red>"
+  world-disabled: "<yellow>这个世界没有启用季节系统。</yellow>"
+  unknown-season: "<red>未知季节，请输入 spring、summer、autumn 或 winter。</red>"
+  unknown-term: "<red>未知节气，请输入有效的节气英文键名。</red>"
+  set-season: "<green>已将世界 <white><world></white> 切换到 <white><season></white>。</green>"
+  set-term: "<green>已将世界 <white><world></white> 切换到 <white><term></white>。</green>"
+  set-auto: "<green>世界 <white><world></white> 已恢复自动轮转。</green>"
+  advanced: "<green>世界 <white><world></white> 已前进到 <white><term></white>。</green>"
+  info: "<green>世界 <white><world></white></green> 当前为 <white><season></white> | <white><term></white> <gray>(<mode>)</gray>"
+  info-temperature: "<aqua>体感温度 <white><temperature></white>，状态：<white><weather></white></aqua>"
+  calendar-opened: "<green>已打开四季日历。</green>"
+  color-refresh: "<yellow>季节色调正在分批刷新，附近区块会逐步改变草地和树叶颜色。</yellow>"
+  help:
+    - "<yellow>/seasons info [世界]</yellow> <gray>- 查看当前季节、节气和温度</gray>"
+    - "<yellow>/seasons calendar</yellow> <gray>- 打开四季日历菜单</gray>"
+    - "<yellow>/seasons event <list|info></yellow> <gray>- 查看季节事件配置</gray>"
+    - "<yellow>/seasons festival <list|today|info></yellow> <gray>- 查看节日配置</gray>"
+    - "<yellow>/seasons reload</yellow> <gray>- 重载配置</gray>"
+    - "<yellow>/seasons set season <世界> <季节></yellow> <gray>- 手动切换季节</gray>"
+    - "<yellow>/seasons set term <世界> <节气></yellow> <gray>- 手动切换节气</gray>"
+    - "<yellow>/seasons next <世界></yellow> <gray>- 前进到下一个节气</gray>"
+    - "<yellow>/seasons auto <世界></yellow> <gray>- 恢复自动轮转</gray>"
+
+notify:
+  join: "<green>当前节气是 <white><term></white>，正值 <white><season></white>。</green>"
+  changed: "<green><world></green> 已进入 <white><season></white> | <white><term></white>"
+  temperature-change: "<aqua>体感变化：</aqua><white><description></white><gray>，当前 </gray><aqua><temperature></aqua>"
+  temperature-event: "<aqua>体感温度：</aqua><aqua><temperature></aqua><gray>，状态 </gray><white><description></white>"
+
+hud:
+  temperature: "<aqua>体感：</aqua><white><temperature></white>"
+
+calendar:
+  title: "<gradient:#b66a12:#2f7a35>桃源季节手账</gradient>"
+  season-item: "<gold>农夫手账 · 今日</gold>"
+  term-item: "<green>节气刻度</green>"
+  temperature-item: "<dark_aqua>体感温度</dark_aqua>"
+  temperature-base-item: "<gold>季节底温</gold>"
+  temperature-weather-item: "<dark_aqua>天气与环境</dark_aqua>"
+  temperature-guide-item: "<gold>农事温度提示</gold>"
+  temperature-note-item: "<gold>节气备忘</gold>"
+  status-item: "<gold>手账书签</gold>"
+  world-item: "<green>农场所在地</green>"
+  weather-item: "<dark_aqua>今日天空</dark_aqua>"
+  next-item: "<gold>下一场节气庆典</gold>"
+  visual-item: "<green>季节馈赠</green>"
+  month-item: "<gold>本月木牌日历</gold>"
+  month-summary-item: "<gold>本月日历牌</gold>"
+  month-term-item: "<dark_green><term></dark_green>"
+  year-term-item: "<dark_green><term></dark_green>"
+  page-overview: "<gold>手账首页</gold>"
+  page-month: "<gold>月历木牌</gold>"
+  page-year: "<gold>全年节气册</gold>"
+  page-temperature: "<dark_aqua>温度小屋</dark_aqua>"
+  page-close: "<red>合上手账</red>"
+  page-previous: "<gold>上一页</gold>"
+  page-next: "<gold>下一页</gold>"
+  lore-season:
+    - "<gray>像农场日历一样记录今天的季节、日期与世界。</gray>"
+    - "<gray>季节：<white><season></white></gray>"
+    - "<gray>日期：<white><date></white></gray>"
+    - "<gray>世界：<white><world></white></gray>"
+  lore-term:
+    - "<gray>查看当前节气，决定自然推进的阶段。</gray>"
+    - "<white><term></white>"
+    - "<gold>点击打开全年节气册。</gold>"
+  lore-temperature:
+    - "<gray>由季节、群系、昼夜、雨水、水体和热源综合计算。</gray>"
+    - "<white><temperature></white>"
+    - "<gray>空气温度：<white><air></white> | 潮湿：<white><wetness></white></gray>"
+  lore-world:
+    - "<gray>这本手账正在记录的世界。</gray>"
+    - "<white><world></white>"
+  lore-weather:
+    - "<gray>像 Stardew 的天气预报一样，给玩家一个季节提示。</gray>"
+    - "<white><weather></white>"
+  lore-next:
+    - "<gray>下一次自然推进会来到这里。</gray>"
+    - "<white><next></white>"
+  lore-visual:
+    - "<gray>记录这个季节会送来的颜色、落叶、雪与作物变化。</gray>"
+    - "<white><visual></white>"
+  lore-month:
+    - "<gray>本月木牌上会标出节气日。</gray>"
+    - "<white><month></white>"
+    - "<gray><terms></gray>"
+    - "<gold>点击查看本月节气。</gold>"
+  lore-month-term:
+    - "<gray>日期：<white><date></white></gray>"
+    - "<gray>季节：<white><season></white></gray>"
+    - "<white><current></white>"
+  lore-month-summary:
+    - "<gray>本月节气列表。</gray>"
+    - "<white><month></white>"
+    - "<gray><terms></gray>"
+  lore-year-term:
+    - "<gray>日期：<white><date></white></gray>"
+    - "<gray>季节：<white><season></white></gray>"
+    - "<white><current></white>"
+  lore-temperature-base:
+    - "<gray>季节先决定基础温度，再叠加环境修正。</gray>"
+    - "<gray><season></gray>"
+    - "<white><base></white>"
+  lore-temperature-weather:
+    - "<gray>夜晚、雨水、海拔、水体和热源都会影响体感。</gray>"
+    - "<gray><world></gray>"
+    - "<white><weather></white>"
+  lore-temperature-guide:
+    - "<gray>夏季白天在沙漠、恶地、丛林和热带草原更容易过热。</gray>"
+    - "<gray>冬季接触水体会快速失温。</gray>"
+    - "<gray>火、营火、岩浆和火把可以提供不同程度的回温。</gray>"
+    - "<gray>盔甲会略微减少失温。</gray>"
+  lore-temperature-note:
+    - "<gray>季节会影响作物、天气、结冰、积雪和生物生成。</gray>"
+    - "<white><term></white>"
+  lore-page-overview:
+    - "<gray>回到季节手账首页。</gray>"
+  lore-page-month:
+    - "<gray>查看本月节气木牌。</gray>"
+  lore-page-year:
+    - "<gray>查看全年二十四节气册。</gray>"
+  lore-page-temperature:
+    - "<gray>查看温度、潮湿与保暖规则。</gray>"
+  lore-page-close:
+    - "<gray>关闭菜单。</gray>"
+  lore-status:
+    - "<gray>当前页面：<white><page></white></gray>"
+    - "<gray>体感：<white><temperature></white></gray>"
+    - "<gray>潮湿：<white><wetness></white></gray>"
+
+  # 季节事件页面
+  page-events: "<gold>季节告示板</gold>"
+  season-events-title: "<gold>镇口季节告示板</gold>"
+  season-events-guide: "<gold>告示板说明</gold>"
+  event-item: "<gold><event></gold>"
+  event-season: "<gray>季节：<white><season></white></gray>"
+  event-type: "<gray>类型：<white><type></white></gray>"
+  event-description: "<gray>介绍：<white><description></white></gray>"
+  event-trigger: "<gray>触发条件：<white><trigger></white></gray>"
+  event-chance: "<gray>触发概率：<white><chance></white></gray>"
+  event-priority: "<gray>优先级：<white><priority></white></gray>"
+  event-cooldown: "<gray>冷却时间：<white><cooldown></white> 秒</gray>"
+  event-effects-title: "<gray>效果列表：</gray>"
+  event-effect-item: "<gray>  - <white><effect></white></gray>"
+  lore-page-events:
+    - "<gray>查看季节会触发的告示板事件。</gray>"
+  lore-season-events-title:
+    - "<gray>当前季节：<white><season></white></gray>"
+    - "<gray>全部事件数量：<white><count></white></gray>"
+    - "<gray>页数：<white><page></white></gray>"
+  lore-season-events-guide:
+    - "<gray>事件会根据季节、温度、概率和冷却自动触发。</gray>"
+    - "<gray>就像镇民告示板，提前告诉玩家会遇到什么。</gray>"
+    - "<gray>事件效果包括粒子、药水、声音等。</gray>"
+  lore-page-previous:
+    - "<gray>翻到上一页内容。</gray>"
+  lore-page-next:
+    - "<gray>翻到下一页内容。</gray>"
+
+  # 节日页面
+  page-festivals: "<dark_purple>镇民节日</dark_purple>"
+  festivals-title: "<dark_purple>镇民节日日历</dark_purple>"
+  festivals-guide: "<gold>节日说明</gold>"
+  festivals-traditional: "<green>传统节日</green>"
+  festivals-legal: "<gold>假日庆典</gold>"
+  festivals-gregorian: "<dark_aqua>公历节日</dark_aqua>"
+  festivals-custom: "<dark_purple>服务器节日</dark_purple>"
+  festival-item: "<gold><festival></gold>"
+  festival-date: "<gray>日期：<white><date></white></gray>"
+  festival-category: "<gray>分类：<white><category></white></gray>"
+  festival-description: "<gray>说明：<white><description></white></gray>"
+  festival-today: "<gold>✨ 今日节日 ✨</gold>"
+  lore-page-festivals:
+    - "<gray>查看 New Year、Valentine's、Easter、Halloween、Christmas。</gray>"
+  lore-festivals-title:
+    - "<gray>当前月份：<white><month></white></gray>"
+    - "<gray>全年节日数量：<white><count></white></gray>"
+    - "<gray>页数：<white><page></white></gray>"
+  lore-festivals-traditional:
+    - "<gray>当前默认不记录传统节日。</gray>"
+  lore-festivals-legal:
+    - "<gray>查看 New Year 等假日庆典。</gray>"
+  lore-festivals-gregorian:
+    - "<gray>查看 Valentine、Easter、Halloween、Christmas。</gray>"
+  lore-festivals-custom:
+    - "<gray>当前默认不记录服务器自定义节日。</gray>"
+  lore-festivals-guide:
+    - "<gray>节日到来时会触发特殊事件。</gray>"
+    - "<gray>今日节日会以附魔书显示。</gray>"
+    - "<gray>默认只记录 5 个节日，保持日历清爽。</gray>"

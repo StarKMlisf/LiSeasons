@@ -1,0 +1,91 @@
+package com.liseasons.festival;
+
+import com.liseasons.festival.FestivalType.FestivalCategory;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * 节日系统单元测试
+ */
+public class FestivalManagerTest {
+
+    @Test
+    public void testFestivalTypeEnumeration() {
+        FestivalType[] types = FestivalType.values();
+        assertEquals(5, types.length, "应该只保留5个默认节日");
+    }
+
+    @Test
+    public void testTraditionalFestivalsDisabledByDefault() {
+        List<FestivalType> traditional = FestivalType.getByCategory(FestivalCategory.TRADITIONAL);
+        assertTrue(traditional.isEmpty(), "不应该默认记录传统节日");
+    }
+
+    @Test
+    public void testLegalHolidays() {
+        List<FestivalType> legal = FestivalType.getByCategory(FestivalCategory.LEGAL_HOLIDAY);
+        assertEquals(1, legal.size(), "应该只保留1个法定/新年节日");
+        assertTrue(legal.stream().allMatch(f -> f.getCategory() == FestivalCategory.LEGAL_HOLIDAY));
+    }
+
+    @Test
+    public void testGregorianFestivals() {
+        List<FestivalType> gregorian = FestivalType.getByCategory(FestivalCategory.GREGORIAN);
+        assertEquals(4, gregorian.size(), "应该只保留4个公历节日");
+        assertTrue(gregorian.stream().allMatch(f -> f.getCategory() == FestivalCategory.GREGORIAN));
+    }
+
+    @Test
+    public void testServerCustomFestivalsDisabledByDefault() {
+        List<FestivalType> custom = FestivalType.getByCategory(FestivalCategory.SERVER_CUSTOM);
+        assertTrue(custom.isEmpty(), "不应该默认记录服务器自定义节日");
+    }
+
+    @Test
+    public void testFestivalDisplayNames() {
+        assertEquals("New Year", FestivalType.NEW_YEAR.getDisplayName());
+        assertEquals("Valentine's Day", FestivalType.VALENTINES_DAY.getDisplayName());
+        assertEquals("Easter", FestivalType.EASTER.getDisplayName());
+        assertEquals("Halloween", FestivalType.HALLOWEEN.getDisplayName());
+        assertEquals("Christmas", FestivalType.CHRISTMAS.getDisplayName());
+    }
+
+    @Test
+    public void testFestivalDates() {
+        for (FestivalType festival : FestivalType.values()) {
+            String date = festival.getLunarDate();
+            assertNotNull(date, "节日日期不应该为null");
+            assertTrue(date.matches("\\d{2}-\\d{2}"), "节日日期格式应该是MM-DD");
+        }
+    }
+
+    @Test
+    public void testSpecificFestivalDates() {
+        assertEquals("01-01", FestivalType.NEW_YEAR.getLunarDate(), "New Year 应该是01-01");
+        assertEquals("02-14", FestivalType.VALENTINES_DAY.getLunarDate(), "Valentine's Day 应该是02-14");
+        assertEquals("04-20", FestivalType.EASTER.getLunarDate(), "Easter 应该是04-20");
+        assertEquals("10-31", FestivalType.HALLOWEEN.getLunarDate(), "Halloween 应该是10-31");
+        assertEquals("12-25", FestivalType.CHRISTMAS.getLunarDate(), "Christmas 应该是12-25");
+    }
+
+    @Test
+    public void testFestivalCategoryDistribution() {
+        int total = FestivalType.getByCategory(FestivalCategory.TRADITIONAL).size()
+                + FestivalType.getByCategory(FestivalCategory.LEGAL_HOLIDAY).size()
+                + FestivalType.getByCategory(FestivalCategory.GREGORIAN).size()
+                + FestivalType.getByCategory(FestivalCategory.SERVER_CUSTOM).size();
+
+        assertEquals(5, total, "所有分类的节日总数应该是5");
+    }
+
+    @Test
+    public void testFestivalCategoryNames() {
+        assertEquals("传统节日", FestivalCategory.TRADITIONAL.getDisplayName());
+        assertEquals("法定/公历节日", FestivalCategory.LEGAL_HOLIDAY.getDisplayName());
+        assertEquals("公历节日", FestivalCategory.GREGORIAN.getDisplayName());
+        assertEquals("服务器自定义节日", FestivalCategory.SERVER_CUSTOM.getDisplayName());
+    }
+}

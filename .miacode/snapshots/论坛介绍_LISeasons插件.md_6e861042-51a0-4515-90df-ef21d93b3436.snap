@@ -1,0 +1,586 @@
+# 🌍 LISeasons - 轻量四季与二十四节气插件
+
+> **让你的 Minecraft 服务器拥有真实的季节变化**
+
+---
+
+## 📋 插件概览
+
+**LISeasons** 是一个专为 Paper / Folia 生存服设计的四季与二十四节气插件。它不是为了给玩家施加硬核惩罚，而是通过精心设计的机制，让玩家能够**自然而真实地感受到季节、天气、温度、草木颜色和世界环境的变化**。
+
+- **插件名称**：LISeasons
+- **当前版本**：1.0.5
+- **支持版本**：Paper / Folia 1.21+
+- **作者**：kmian
+- **性质**：轻量级、高可配置、零依赖
+
+---
+
+## ✨ 核心功能详解
+
+### 1️⃣ 四季轮转系统
+插件实现了完整的四季循环：**春季 → 夏季 → 秋季 → 冬季 → 春季**
+
+- 支持按**现实公历日期**自动切换（春3月4日、夏6月4日、秋9月4日、冬12月4日）
+- 支持按**游戏天数**循环切换（每季24天，可自定义）
+- 支持**手动指令**随时切换季节
+- 每个世界独立管理，主世界、下界、末地可分别配置
+
+**配置示例**：
+```yaml
+season-start-dates:
+  spring: "03-04"
+  summer: "06-04"
+  autumn: "09-04"
+  winter: "12-04"
+```
+
+---
+
+### 2️⃣ 二十四节气精准联动
+插件内置完整的**24节气系统**，与现实公历日期精准对应：
+
+| 季节 | 节气 | 公历日期 |
+|------|------|--------|
+| 冬季 | 小寒 | 1月5日 |
+| 冬季 | 大寒 | 1月20日 |
+| 春季 | 立春 | 2月4日 |
+| 春季 | 雨水 | 2月19日 |
+| 春季 | 惊蛰 | 3月6日 |
+| 春季 | 春分 | 3月21日 |
+| 春季 | 清明 | 4月5日 |
+| 春季 | 谷雨 | 4月20日 |
+| 夏季 | 立夏 | 5月6日 |
+| 夏季 | 小满 | 5月21日 |
+| 夏季 | 芒种 | 6月6日 |
+| 夏季 | 夏至 | 6月21日 |
+| 夏季 | 小暑 | 7月7日 |
+| 夏季 | 大暑 | 7月23日 |
+| 秋季 | 立秋 | 8月8日 |
+| 秋季 | 处暑 | 8月23日 |
+| 秋季 | 白露 | 9月8日 |
+| 秋季 | 秋分 | 9月23日 |
+| 秋季 | 寒露 | 10月8日 |
+| 秋季 | 霜降 | 10月24日 |
+| 冬季 | 立冬 | 11月8日 |
+| 冬季 | 小雪 | 11月22日 |
+| 冬季 | 大雪 | 12月7日 |
+| 冬季 | 冬至 | 12月22日 |
+
+节气切换时会**广播通知**全服玩家，让大家感受到季节的更替。
+
+---
+
+### 3️⃣ 季节天气系统
+不同季节有不同的降雨、降雪、雷暴倾向：
+
+| 季节 | 降雨概率 | 雷暴概率 | 特点 |
+|------|--------|--------|------|
+| 春季 | 45% | 6% | 春雨绵绵，生机勃勃 |
+| 夏季 | 25% | 12% | 干热少雨，偶有雷暴 |
+| 秋季 | 30% | 4% | 凉爽干燥，秋高气爽 |
+| 冬季 | 10% | 0% | 少雨少雪，寒冷干燥 |
+
+插件会根据季节自动调整天气倾向，无需手动干预。
+
+---
+
+### 4️⃣ 季节色调与视觉变化
+玩家周围的世界会根据季节**动态变色**：
+
+- **春季**：草地、树叶呈现鲜绿色（模拟花森林）
+- **夏季**：草地、树叶呈现浓绿色（模拟平原）
+- **秋季**：树叶逐步转为暖橙色、黄色（模拟风吹草原）
+- **冬季**：草地、树叶呈现白色、冷色调（模拟雪地）
+
+**色调刷新机制**：
+- 分批处理，不会瞬间重绘全世界
+- 只处理玩家附近已加载区块
+- 按预算分批刷新，性能稳定
+
+**视觉特效**：
+- 🍂 **秋季落叶**：玩家周围树叶飘落粒子
+- ❄️ **冬季极光**：夜晚有概率出现极光（40%概率）
+- ⛄ **冬季暴风雪**：暴风雪与积雪特效
+- 🌸 **春季樱花**：橡树树叶虚拟显示为樱花树叶
+- 🍎 **夏季落苹果**：橡树有概率掉落苹果
+
+---
+
+### 5️⃣ 双层温度系统
+插件实现了**空气温度**和**玩家体温**的分离计算，更加真实：
+
+#### 空气温度计算
+空气温度由以下因素决定：
+- 季节基础温度
+- 二十四节气修正
+- 昼夜曲线（正午升温、午夜降温）
+- 天气影响（雨天-2.5°、雷暴-4.0°）
+- 生物群系（沙漠、丛林更热）
+- 海拔高度（每升高120方块降低3°）
+
+#### 玩家体温计算
+玩家体温会**逐步趋近**空气温度，并受以下影响：
+- 🌊 **入水**：增加潮湿值，冬季入水更危险
+- 🛡️ **盔甲保暖**：不同材质提供不同保暖值
+  - 皮革盔甲：基础保暖
+  - 铁盔甲：中等保暖
+  - 钻石盔甲：高保暖
+  - 下界合金盔甲：最高保暖
+- 🔥 **热源**：普通火源升温，灵魂火和冰类降温
+- 🪵 **手持物品**：可配置升温/降温效果
+
+#### 温度事件
+当玩家体温达到极端值时会触发事件：
+- **低温事件**：冻伤、移动缓慢、挖掘速度下降
+- **高温事件**：中暑、口渴、移动缓慢
+
+推荐配置：
+```yaml
+temperature-event-mode: "highest-only"
+temperature-event-cooldown-seconds: 5
+```
+
+---
+
+### 6️⃣ 冬冻春融机制
+真实模拟季节变化对水体的影响：
+
+#### 冬季结冰
+- 露天静水有35%概率结冰
+- 海洋和河流群系不参与结冰
+- 只在玩家附近检查，不会满世界扫区块
+
+#### 春季融化
+- 露天冰雪有60%概率融化
+- 季节切换到春季时，玩家周围已加载区块会加入融雪队列
+- 分批处理，每tick最多处理512个方块
+
+**处理的方块类型**：
+```
+ICE → WATER
+FROSTED_ICE → WATER
+SNOW → AIR
+SNOW_BLOCK → AIR
+POWDER_SNOW → AIR
+```
+
+---
+
+### 7️⃣ 季节生物替换
+不同季节会替换部分自然生成的生物：
+
+- **夏季热带群系**：僵尸70%概率变为尸壳（更耐热）
+- **冬季**：骷髅85%概率变为流浪者（冰冻弓箭）
+
+这让生物群系更加符合季节特色。
+
+---
+
+### 8️⃣ 作物生长联动
+与 **CustomCrops** 插件无缝集成，不同季节作物生长速度不同：
+
+| 季节 | 生长倍率 | 无遮盖作物 | 特点 |
+|------|--------|---------|------|
+| 春季 | 1.25x | 正常 | 春暖花开，作物加速 |
+| 夏季 | 2.0x | 正常 | 骄阳似火，作物飞速生长 |
+| 秋季 | 1.0x | 正常 | 秋高气爽，作物正常生长 |
+| 冬季 | 1.0x | 停止 | 冰天雪地，无遮盖作物停止生长 |
+
+---
+
+### 9️⃣ 日历菜单
+游戏内按 `/seasons calendar` 打开**多页日历菜单**：
+
+- 📅 **总览页**：当前季节、节气、温度概览
+- 📆 **本月节气页**：本月所有节气及日期
+- 📊 **全年节气页**：全年24节气总览
+- 🌡️ **温度说明页**：温度系统详细说明
+
+菜单支持 **MiniMessage 渐变色**，美观易用。
+
+---
+
+### 🔟 PlaceholderAPI 占位符
+安装 PlaceholderAPI 后自动注册以下占位符，可用于 HUD、记分板、菜单等：
+
+#### 季节与节气占位符
+```
+%liseasons_season%              当前季节中文名（春季/夏季/秋季/冬季）
+%liseasons_season_key%          当前季节键名（spring/summer/autumn/winter）
+%liseasons_term%                当前节气中文名（立春/雨水/...）
+%liseasons_term_key%            当前节气键名（lichun/yushui/...）
+%liseasons_world%               当前世界名称
+%liseasons_mode%                自动/手动模式
+```
+
+#### 温度与湿度占位符
+```
+%liseasons_temperature%         玩家体感温度（带单位，如 15.2°C）
+%liseasons_temperature_status%  温度状态（舒适/寒冷/炎热等）
+%liseasons_air_temperature%     空气温度（带单位，如 18.5°C）
+%liseasons_wetness%             玩家潮湿度（0-100%）
+```
+
+#### 日期占位符（v1.0.5 新增）
+```
+%liseasons_date%                服务器当前月日（如 5月7日）
+%liseasons_server_date%         服务器当前月日，等同于 %liseasons_date%
+%liseasons_month_day%           服务器当前月日，等同于 %liseasons_date%
+%liseasons_date_iso%            服务器当前完整日期（如 2026-05-07）
+%liseasons_month%               服务器当前月份数字（如 5）
+%liseasons_day%                 服务器当前日期数字（如 7）
+```
+
+**使用示例**：
+```
+当前季节：%liseasons_season% | 节气：%liseasons_term%
+体感温度：%liseasons_temperature% | 状态：%liseasons_temperature_status%
+今日日期：%liseasons_date% | 完整日期：%liseasons_date_iso%
+服务器日期：%liseasons_month%月%liseasons_day%日
+```
+
+**常见应用场景**：
+- 计分板：`今日日期: %liseasons_date%`
+- TAB 菜单：`季节: %liseasons_season% | 温度: %liseasons_temperature%`
+- 聊天格式：`[%liseasons_term%] 玩家消息`
+- 菜单标题：`当前节气：%liseasons_term% (%liseasons_date%)`
+
+---
+
+### 1️⃣1️⃣ Folia 兼容性
+完全支持 **Folia 异步调度**，无需担心性能问题：
+
+- 玩家相关视觉、温度检测使用玩家调度器
+- 季节状态按世界区域调度
+- 春季融雪队列在 Folia 下投递到对应区块区域执行
+- 时间同步在 Folia 下使用世界 spawn 区域执行
+
+---
+
+## 🎮 指令系统
+
+### 主指令
+```
+/seasons
+/season
+```
+
+### 常用指令详解
+
+| 指令 | 权限 | 功能 |
+|------|------|------|
+| `/seasons help` | player | 显示帮助信息 |
+| `/seasons info [world]` | player | 查看指定世界的季节、节气、温度 |
+| `/seasons calendar` | player | 打开日历菜单 |
+| `/seasons reload` | admin | 重载配置文件 |
+| `/seasons set season <world> <spring\|summer\|autumn\|winter>` | admin | 手动设置季节 |
+| `/seasons set term <world> <solarTermKey>` | admin | 手动设置节气 |
+| `/seasons next <world>` | admin | 切换到下一个季节 |
+| `/seasons auto <world>` | admin | 切换自动模式 |
+
+### 权限系统
+
+```yaml
+liseasons.player  # 基础查询和菜单（默认所有玩家）
+liseasons.admin   # 管理指令（默认OP）
+```
+
+---
+
+## ⚙️ 配置文件详解
+
+### 主配置文件 `config.yml`
+
+#### 时间同步配置
+```yaml
+time:
+  # 是否按现实公历日期切换节气
+  use-gregorian-trigger: true
+  
+  # 是否同步现实时间（关闭原版昼夜循环）
+  sync-real-time: false
+  
+  # 自动刷新间隔（秒）
+  refresh-interval-seconds: 60
+  
+  # 四季开始日期
+  season-start-dates:
+    spring: "03-04"
+    summer: "06-04"
+    autumn: "09-04"
+    winter: "12-04"
+  
+  # 游戏天数循环（关闭公历触发时）
+  season-duration-days:
+    spring: 24
+    summer: 24
+    autumn: 24
+    winter: 24
+```
+
+#### 世界配置
+```yaml
+worlds:
+  # 是否默认启用全部世界
+  enable-all: false
+  
+  # 启用的世界列表
+  allowed:
+    - world
+  
+  # 禁用的世界列表
+  denied:
+    - world_nether
+    - world_the_end
+```
+
+#### 季节效果配置
+```yaml
+season-effects:
+  spring:
+    uncovered-crop-growth-multiplier: 1.25
+    rain-chance: 45
+    thunder-chance: 6
+  
+  summer:
+    uncovered-crop-growth-multiplier: 2.0
+    rain-chance: 25
+    thunder-chance: 12
+  
+  autumn:
+    uncovered-crop-growth-multiplier: 1.0
+    rain-chance: 30
+    thunder-chance: 4
+  
+  winter:
+    uncovered-crop-growth-multiplier: 1.0
+    uncovered-crop-stop: true
+    rain-chance: 10
+    thunder-chance: 0
+```
+
+#### 视觉特效配置
+```yaml
+visual-effects:
+  interval-ticks: 40
+  search-radius: 12
+  
+  aurora:
+    enable: true
+    chance-percent: 40
+  
+  blizzard:
+    enable: true
+    snow-placement-chance: 20
+  
+  falling-leaves:
+    enable: true
+  
+  autumn-leaf-color:
+    enable: true
+    radius: 10
+    budget-per-player: 24
+  
+  spring-cherry-leaf:
+    enable: true
+  
+  tree-snow:
+    enable: true
+  
+  apple-drop:
+    enable: true
+    chance-percent: 8
+```
+
+#### 冬冻春融配置
+```yaml
+season-world-rules:
+  water-cycle:
+    enable: true
+    interval-ticks: 40
+    search-radius: 6
+    winter-freeze-chance-percent: 35
+    spring-melt-chance-percent: 60
+    transition-melt-radius-chunks: 6
+    transition-melt-budget-per-tick: 512
+    exempt-biomes:
+      - ocean
+      - river
+```
+
+#### 季节生物配置
+```yaml
+season-world-rules:
+  mob-rules:
+    enable: true
+    summer-zombie-to-husk-chance-percent: 70
+    winter-skeleton-to-stray-chance-percent: 85
+```
+
+### 温度系统配置 `temperature.yml`
+
+详细的温度计算参数，包括：
+- 基础温度模式（每日随机/固定值）
+- 节气温度修正
+- 昼夜曲线
+- 天气影响
+- 海拔影响
+- 盔甲保暖值
+- 手持物品效果
+- 温度事件触发条件
+
+### 季节色调配置 `season-color.yml`
+
+控制玩家周围 biome 动态染色：
+```yaml
+biome-spoof:
+  seasons:
+    spring: "flower_forest"
+    summer: "plains"
+    autumn: "windswept_savanna"
+    winter: "snowy_plains"
+```
+
+### 消息文本配置 `messages.yml`
+
+所有游戏内消息，支持 MiniMessage 渐变色和占位符。
+
+---
+
+## 🏗️ 架构设计
+
+### 分层设计
+```
+LISeasonsPlugin (主类)
+├── ConfigManager (配置管理)
+├── SeasonManager (季节管理)
+├── TemperatureService (温度计算)
+├── SeasonVisualManager (视觉特效)
+├── CalendarMenu (日历菜单)
+├── SeasonCommand (指令处理)
+└── 各类监听器 (事件处理)
+```
+
+### 核心模块
+
+| 模块 | 职责 |
+|------|------|
+| `season` | 四季、节气、时间计算 |
+| `climate` | 温度系统、温度事件 |
+| `calendar` | 日历菜单、菜单交互 |
+| `config` | 配置加载、配置管理 |
+| `visual` | 视觉特效、粒子效果 |
+| `listener` | 事件监听、作物生长、天气联动 |
+| `command` | 指令处理、参数补全 |
+| `integration` | 第三方插件集成 |
+| `scheduler` | 调度适配（Bukkit/Folia） |
+
+---
+
+## 📊 性能指标
+
+- **内存占用**：极低（<5MB）
+- **CPU 占用**：极低（定时任务优化）
+- **刷新间隔**：可配置（默认60秒）
+- **视觉特效**：分批处理，不会卡顿
+- **Folia 支持**：完全异步调度，无阻塞
+
+---
+
+## 🔧 安装与使用
+
+### 安装步骤
+
+1. 下载 `LISeasons-1.0.5.jar`
+2. 放入服务器 `plugins` 文件夹
+3. 重启服务器
+4. 配置文件自动生成在 `plugins/LISeasons/`
+5. 根据需要修改配置文件
+6. 执行 `/seasons reload` 重载配置
+
+### 首次配置建议
+
+1. 检查 `config.yml` 中的 `worlds.allowed` 是否包含你的主世界
+2. 根据服务器特色调整 `season-effects` 中的作物倍率
+3. 根据服务器性能调整 `visual-effects` 中的特效预算
+4. 如果使用 CustomCrops，确保 `integration.customcrops.enable: true`
+
+---
+
+## ❓ 常见问题
+
+### Q: 颜色为什么不是瞬间变化？
+**A:** 为了性能稳定，插件只处理玩家附近已加载区块，并按预算分批刷新。这样可以避免卡顿。
+
+### Q: 关闭时间同步后昼夜还是停住？
+**A:** 1.0版本已修复。关闭 `sync-real-time` 后插件会自动恢复原版昼夜循环。
+
+### Q: PlaceholderAPI 没有占位符？
+**A:** 确认以下几点：
+- PlaceholderAPI 已安装
+- 服务器已重启或执行 `/seasons reload`
+- 占位符前缀是 `liseasons`
+
+### Q: 春天没有化雪？
+**A:** 确认以下几点：
+- `season-world-rules.water-cycle.enable: true`
+- 世界在 `worlds.allowed` 列表内
+- 玩家附近区块是已加载区块
+
+### Q: 能否只在某些世界启用？
+**A:** 可以。修改 `config.yml` 中的 `worlds` 配置：
+```yaml
+worlds:
+  enable-all: false
+  allowed:
+    - world
+    - world_custom
+  denied:
+    - world_nether
+```
+
+### Q: 温度系统太严格了怎么办？
+**A:** 修改 `temperature.yml` 中的温度事件配置，或调整 `temperature-event-cooldown-seconds` 增加冷却时间。
+
+---
+
+## 🎯 适用场景
+
+✅ **生存服**：增加季节变化，提升沉浸感  
+✅ **养老服**：轻量级设计，不影响性能  
+✅ **创意服**：支持多世界独立配置  
+✅ **RPG服**：与其他插件无缝集成  
+✅ **Folia 服务器**：完全兼容异步调度  
+
+---
+
+## 📝 更新日志
+
+### v1.0.5
+- 修复温度系统计算精度
+- 优化视觉特效性能
+- 完善 Folia 兼容性
+
+### v1.0.4
+- 新增 PlaceholderAPI 占位符
+- 优化冬冻春融机制
+- 增加季节生物替换
+
+### v1.0.3
+- 新增日历菜单
+- 完善温度事件系统
+
+### v1.0.0
+- 首次发布
+- 实现四季、节气、温度、视觉特效等核心功能
+
+---
+
+## 💬 反馈与支持
+
+如有问题或建议，欢迎在论坛反馈！
+
+---
+
+**让你的 Minecraft 服务器四季分明，生机勃勃！** 🌸🌞🍂❄️

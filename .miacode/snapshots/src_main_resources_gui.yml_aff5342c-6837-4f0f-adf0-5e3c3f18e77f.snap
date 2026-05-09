@@ -1,0 +1,64 @@
+# LISeasons GUI 菜单配置
+# 这里用于配置插件 Inventory GUI 的结构项。
+# 文案（物品名称、lore）仍在 messages.yml 中维护，便于翻译和统一管理。
+
+calendar:
+  # /seasons calendar 菜单标题，支持 MiniMessage 颜色与渐变标签。
+  title: "<gradient:#6b4b2a:#4f6b3c>桃源季节手账</gradient>"
+
+  # 菜单大小，必须是 9 的倍数。当前 Stardew 风格布局依赖 54 格。
+  size: 54
+
+  # 是否启用季节边框装饰。
+  season-frame: true
+
+  # 页面按钮槽位。除非你同时调整代码交互逻辑，否则建议只改材质，不改槽位。
+  navigation:
+    overview:
+      slot: 45
+      material: WRITABLE_BOOK
+    month-terms:
+      slot: 46
+      material: OAK_SIGN
+    year-terms:
+      slot: 48
+      material: CLOCK
+    temperature:
+      slot: 49
+      material: CAMPFIRE
+    season-events:
+      slot: 50
+      material: LODESTONE
+    festivals:
+      slot: 51
+      material: CAKE
+    previous-page:
+      slot: 47
+      material: ARROW
+    next-page:
+      slot: 52
+      material: SPECTRAL_ARROW
+
+  # 总览页物品槽位与材质。
+  overview-items:
+    season:
+      slot: 4
+      material: WRITABLE_BOOK
+    world:
+      slot: 13
+      material: MAP
+    term:
+      slot: 21
+      material: CLOCK
+    next-term:
+      slot: 23
+      material: COMPASS
+    temperature:
+      slot: 29
+      material: CAMPFIRE
+    weather:
+      slot: 31
+      material: WATER_BUCKET
+    gift:
+      slot: 33
+      material: HAY_BLOCK

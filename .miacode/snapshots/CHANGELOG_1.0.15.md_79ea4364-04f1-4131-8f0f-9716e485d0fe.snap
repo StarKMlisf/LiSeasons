@@ -1,0 +1,17 @@
+# LISeasons 1.0.15 更新说明
+
+## 新增
+
+- 新增 `gui.yml` 独立 GUI 菜单配置文件。
+- `/seasons calendar` 菜单标题与大小现在从 `gui.yml` 的 `calendar.title`、`calendar.size` 读取。
+- `gui.yml` 预留日历导航按钮与总览页物品的槽位/材质配置，方便后续继续扩展菜单自定义能力。
+
+## 优化
+
+- 插件启动时会自动生成缺失的 `gui.yml`。
+- `gui.yml` 读取时兼容旧 `config.yml` 中的 `calendar.title`、`calendar.size` 作为 fallback。
+- 新增 MiniMessage 原始文本解析方法，避免 GUI 标题继续绑定到 `messages.yml` 文案路径。
+
+## 构建
+
+- 插件版本更新为 `1.0.15`。

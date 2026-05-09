@@ -1,0 +1,279 @@
+# LISeasons 1.0.5 更新日志
+
+**发布日期**：2026年5月9日  
+**版本号**：1.0.5  
+**支持版本**：Paper / Folia 1.21+
+
+---
+
+## 🎉 主要更新
+
+### ✨ 新增功能
+
+#### 1. 季节事件系统（全新）
+- **13 种季节事件类型**：春季4种、夏季2种、秋季3种、冬季4种
+- **23 个季节事件配置**：每个事件都有独立的触发条件、优先级、冷却机制
+- **8 种事件效果类型**：
+  - 粒子特效（Particle）
+  - 药水效果（Potion Effect）
+  - 声音播放（Sound）
+  - 玩家消息（Message）
+  - 屏幕冻结（Screen Freeze）
+  - 伤害效果（Damage）
+  - 潮湿度增加（Wetness）
+  - 温度调整（Temperature）
+
+#### 2. 节日系统（全新）
+- **29 个节日配置**：
+  - 中国传统节日 13 个（春节、元宵节、龙抬头、上巳节、清明节、端午节、七夕节、中元节、中秋节、重阳节、腊八节、小年、除夕）
+  - 法定节假日 7 个（元旦、春节假期、清明假期、劳动节、端午假期、中秋假期、国庆节）
+  - 常见公历节日 9 个（情人节、妇女节、植树节、愚人节、青年节、儿童节、教师节、万圣节、圣诞节）
+- **节日分类管理**：支持按类别查询和管理
+- **节日事件触发**：节日到来时自动触发相应事件
+
+#### 3. PlaceholderAPI 占位符扩展（v1.0.5 新增）
+新增 6 个日期相关占位符：
+- `%liseasons_date%` - 服务器当前月日（如 5月7日）
+- `%liseasons_server_date%` - 服务器当前月日（别名）
+- `%liseasons_month_day%` - 服务器当前月日（别名）
+- `%liseasons_date_iso%` - 完整日期（如 2026-05-07）
+- `%liseasons_month%` - 月份数字（如 5）
+- `%liseasons_day%` - 日期数字（如 7）
+
+**占位符总数**：从 10 个扩展到 16 个
+
+#### 4. 指令系统扩展
+新增季节事件和节日相关指令：
+- `/seasons event list` - 列出所有季节事件
+- `/seasons event info` - 显示事件系统信息
+- `/seasons festival list` - 列出所有节日
+- `/seasons festival info` - 显示节日系统信息
+
+#### 5. 配置文件
+新增两个配置文件：
+- `season-events.yml` - 23 个季节事件的完整配置（348 行）
+- `festivals.yml` - 29 个节日的完整配置
+
+---
+
+## 🔧 技术改进
+
+### 核心架构
+- **SeasonEventManager** - 事件管理器，负责事件触发、冷却、效果执行
+- **SeasonEventEffectExecutor** - 效果执行器，支持 8 种效果类型
+- **FestivalManager** - 节日管理器，负责节日识别和事件触发
+- **PlayerQuitListener** - 玩家离线监听器，自动清理玩家数据
+
+### 配置系统
+- **SeasonEventConfigLoader** - 季节事件配置加载器
+- **FestivalConfigLoader** - 节日配置加载器
+- **PluginConfig 扩展** - 添加 seasonEventConfigs 和 festivalConfigs 字段
+
+### 集成改进
+- **LISeasonsPlugin** - 集成事件和节日管理器
+- **TemperatureMonitorService** - 集成事件触发循环
+- **SeasonCommand** - 添加事件和节日子命令
+
+---
+
+## 📊 代码统计
+
+| 项目 | 数量 |
+|------|------|
+| 新增 Java 类 | 10 个 |
+| 新增配置文件 | 2 个 |
+| 新增测试类 | 3 个 |
+| 修改文件 | 5 个 |
+| 总代码行数 | 2000+ 行 |
+| 测试用例 | 30+ 个 |
+
+---
+
+## 📁 新增文件清单
+
+### 事件系统（6 个类）
+```
+src/main/java/com/liseasons/event/
+├── SeasonEventType.java              # 13种事件类型枚举
+├── SeasonEventManager.java           # 事件管理器
+├── SeasonEventEffectExecutor.java    # 效果执行器
+├── SeasonEventConfig.java            # 事件配置
+├── SeasonEventContext.java           # 事件上下文
+└── SeasonEventEffect.java            # 效果接口
+```
+
+### 节日系统（3 个类）
+```
+src/main/java/com/liseasons/festival/
+├── FestivalType.java                 # 29个节日枚举
+├── FestivalManager.java              # 节日管理器
+└── FestivalConfig.java               # 节日配置
+```
+
+### 监听器（1 个类）
+```
+src/main/java/com/liseasons/listener/
+└── PlayerQuitListener.java           # 玩家离线数据清理
+```
+
+### 配置文件（2 个）
+```
+src/main/resources/
+├── season-events.yml                 # 23个季节事件配置
+└── festivals.yml                     # 29个节日配置
+```
+
+### 测试文件（3 个）
+```
+src/test/java/com/liseasons/
+├── event/SeasonEventManagerTest.java
+├── festival/FestivalManagerTest.java
+└── integration/SeasonEventAndFestivalIntegrationTest.java
+```
+
+---
+
+## 🎯 系统特性
+
+### 灵活的事件触发
+- 支持温度阈值触发（above/below/range 三种模式）
+- 支持优先级排序（高优先级优先触发）
+- 支持全局和单个事件冷却机制
+- 支持启用/禁用开关
+
+### 完整的节日覆盖
+- 传统节日、法定节假日、公历节日全覆盖
+- 支持按分类查询
+- 支持节日事件触发
+- 支持自定义节日配置
+
+### 多样化效果
+- 粒子特效：支持所有 Bukkit Particle 类型
+- 药水效果：支持所有 PotionEffectType
+- 声音播放：支持所有 Sound 类型
+- 消息通知：支持 MiniMessage 格式
+- 屏幕冻结：支持自定义冻结时长
+- 伤害效果：支持自定义伤害值
+- 潮湿度增加：支持自定义增加量
+- 温度调整：支持自定义温度变化
+
+### 强大的管理
+- 玩家离线自动清理数据
+- 支持热重载配置
+- 支持指令查询和管理
+- 支持 PlaceholderAPI 集成
+
+### 完善的测试
+- 单元测试：事件管理器、节日管理器
+- 集成测试：事件和节日系统集成
+- 数据一致性验证
+
+---
+
+## 🔄 修改的文件
+
+### 核心文件
+- **LISeasonsPlugin.java** - 添加事件和节日管理器初始化
+- **ConfigManager.java** - 添加事件和节日配置加载
+- **SeasonCommand.java** - 添加事件和节日子命令
+
+### 配置文件
+- **PluginConfig.java** - 扩展配置字段
+
+### 监听器
+- **PlayerJoinListener.java** - 集成事件系统初始化
+
+---
+
+## 📝 配置示例
+
+### 季节事件配置（season-events.yml）
+```yaml
+global:
+  event-cooldown-seconds: 5
+  highest-priority-only: true
+
+spring-events:
+  fair-weather-spring:
+    type: "FAIR_WEATHER"
+    season: "SPRING"
+    trigger-temperature: 15.0
+    trigger-mode: "above"
+    priority: 1
+    cooldown-seconds: 30
+    effects:
+      - "particle:CHERRY_LEAVES"
+      - "message:春风拂面，万物复苏"
+```
+
+### 节日配置（festivals.yml）
+```yaml
+festivals:
+  spring-festival:
+    name: "春节"
+    category: "TRADITIONAL"
+    date: "01-01"
+    enabled: true
+    effects:
+      - "particle:FIREWORK"
+      - "sound:ENTITY_FIREWORK_ROCKET_LAUNCH"
+      - "message:恭贺新春！"
+```
+
+---
+
+## 🚀 使用指南
+
+### 查看季节事件
+```
+/seasons event list      # 列出所有事件
+/seasons event info      # 显示事件系统信息
+```
+
+### 查看节日
+```
+/seasons festival list   # 列出所有节日
+/seasons festival info   # 显示节日系统信息
+```
+
+### 使用 PlaceholderAPI 占位符
+```
+计分板：今日日期: %liseasons_date%
+TAB菜单：季节: %liseasons_season% | 温度: %liseasons_temperature%
+聊天格式：[%liseasons_term%] 玩家消息
+菜单标题：当前节气：%liseasons_term% (%liseasons_date%)
+```
+
+---
+
+## 🐛 已知问题
+
+暂无已知问题。
+
+---
+
+## 📋 后续计划
+
+- [ ] 季节事件的自定义效果扩展
+- [ ] 节日事件的高级配置选项
+- [ ] 事件和节日的数据库持久化
+- [ ] 更多 PlaceholderAPI 占位符
+- [ ] 事件和节日的可视化管理菜单
+
+---
+
+## 🙏 致谢
+
+感谢所有测试者和反馈者的支持！
+
+---
+
+## 📞 反馈与支持
+
+如有问题或建议，欢迎在论坛或 GitHub 上反馈。
+
+---
+
+**版本号**：1.0.5  
+**发布日期**：2026年5月9日  
+**作者**：kmian

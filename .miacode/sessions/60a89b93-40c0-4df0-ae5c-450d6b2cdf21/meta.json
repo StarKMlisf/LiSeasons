@@ -1,0 +1,13 @@
+{
+  "id": "60a89b93-40c0-4df0-ae5c-450d6b2cdf21",
+  "title": "GUI菜单布局优化去重",
+  "conversation_type": "agent",
+  "created_at": 1778341223,
+  "updated_at": 1778342684,
+  "status": "active",
+  "token_usage": {
+    "total_prompt": 0,
+    "total_completion": 0,
+    "total_cost_usd": 0.0
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "id": "5ddb1ab1-6c05-4740-b28d-48aac71f4e86",
+  "title": "更新日志同步",
+  "conversation_type": "agent",
+  "created_at": 1778327206,
+  "updated_at": 1778339758,
+  "status": "active",
+  "token_usage": {
+    "total_prompt": 0,
+    "total_completion": 0,
+    "total_cost_usd": 0.0
+  }
+}

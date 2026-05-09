@@ -1,0 +1,140 @@
+package com.liseasons.config;
+
+import com.liseasons.event.SeasonEventConfig;
+import com.liseasons.event.SeasonEventType;
+import com.liseasons.season.Season;
+import org.bukkit.configuration.ConfigurationSection;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+/**
+ * 季节事件配置加载器
+ */
+public class SeasonEventConfigLoader {
+    
+    /**
+     * 从配置文件加载季节事件配置
+     */
+    public static List<SeasonEventConfig> loadSeasonEvents(ConfigurationSection config) {
+        List<SeasonEventConfig> events = new ArrayList<>();
+        
+        if (config == null) {
+            return events;
+        }
+
+        // 加载春季事件
+        loadSeasonEventsByType(config, "spring-events", events);
+        
+        // 加载夏季事件
+        loadSeasonEventsByType(config, "summer-events", events);
+        
+        // 加载秋季事件
+        loadSeasonEventsByType(config, "autumn-events", events);
+        
+        // 加载冬季事件
+        loadSeasonEventsByType(config, "winter-events", events);
+
+        return events;
+    }
+
+    /**
+     * 加载指定季节的事件
+     */
+    private static void loadSeasonEventsByType(
+            ConfigurationSection config,
+            String seasonKey,
+            List<SeasonEventConfig> events
+    ) {
+        ConfigurationSection seasonSection = config.getConfigurationSection(seasonKey);
+        if (seasonSection == null) {
+            return;
+        }
+
+        for (String eventKey : seasonSection.getKeys(false)) {
+            ConfigurationSection eventSection = seasonSection.getConfigurationSection(eventKey);
+            if (eventSection == null) {
+                continue;
+            }
+
+            try {
+                SeasonEventConfig eventConfig = loadSingleEvent(eventKey, eventSection, inferSeason(seasonKey));
+                if (eventConfig != null) {
+                    events.add(eventConfig);
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to load season event: " + eventKey + " - " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 加载单个事件配置
+     */
+    private static SeasonEventConfig loadSingleEvent(String eventId, ConfigurationSection section, Season fallbackSeason) {
+        String typeStr = section.getString("type");
+        if (typeStr == null) {
+            throw new IllegalArgumentException("Event type not specified");
+        }
+
+        SeasonEventType type = SeasonEventType.valueOf(typeStr.trim().toUpperCase(Locale.ROOT));
+        Season season = parseSeason(section.getString("season"), fallbackSeason);
+        if (season == null) {
+            season = type.getSeason();
+        }
+        if (!type.supportsSeason(season)) {
+            throw new IllegalArgumentException("Event type " + type.name() + " does not support season " + season.name());
+        }
+
+        double triggerTemperature = section.getDouble("trigger-temperature", 0.0);
+        String triggerMode = section.getString("trigger-mode", "above");
+        double triggerTemperatureMax = section.getDouble("trigger-temperature-max", triggerTemperature);
+        int priority = section.getInt("priority", 0);
+        long cooldownSeconds = section.getLong("cooldown-seconds", 30);
+        double chancePercent = Math.max(0.0D, Math.min(100.0D, section.getDouble("chance-percent", 100.0D)));
+        String description = section.getString("description", "");
+        boolean enabled = section.getBoolean("enabled", true);
+
+        List<String> effects = section.getStringList("effects");
+        if (effects == null) {
+            effects = new ArrayList<>();
+        }
+
+        return new SeasonEventConfig(
+                eventId,
+                type,
+                season,
+                triggerTemperature,
+                triggerMode,
+                triggerTemperatureMax,
+                priority,
+                cooldownSeconds * 1000L,
+                chancePercent,
+                description,
+                effects,
+                enabled
+        );
+    }
+
+    private static Season inferSeason(String seasonKey) {
+        return switch (seasonKey) {
+            case "spring-events" -> Season.SPRING;
+            case "summer-events" -> Season.SUMMER;
+            case "autumn-events" -> Season.AUTUMN;
+            case "winter-events" -> Season.WINTER;
+            default -> null;
+        };
+    }
+
+    private static Season parseSeason(String raw, Season fallbackSeason) {
+        if (raw == null || raw.isBlank()) {
+            return fallbackSeason;
+        }
+        try {
+            return Season.valueOf(raw.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+            return Season.fromKey(raw).orElse(fallbackSeason);
+        }
+    }
+}

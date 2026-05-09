@@ -1,0 +1,65 @@
+# LISeasons 节日配置
+# 仅保留插件默认记录的节日。
+#
+# 配置项说明：
+# type: 节日类型，必须对应插件内置 FestivalType 枚举。
+# date: 节日日期，格式为 MM-dd，取值范围 01-01 到 12-31。
+# display-name: 节日展示名称，可使用颜色代码。
+# category: 节日分类。默认统一使用 SERVER_CUSTOM，菜单和指令中显示为“节日”。
+# priority: 同一天存在多个节日时的优先级，数字越大越优先。
+# enabled: 是否启用该节日，true 启用，false 禁用。
+# description: 节日说明，会显示在节日菜单中。
+
+# 全局设置
+global:
+  # 全局节日冷却时间（秒）
+  festival-cooldown-seconds: 5
+  # 是否启用节日系统
+  enabled: true
+
+# 服务器节日：只保留“节日”这一类，不再区分法定/公历/传统分类。
+server-custom-festivals:
+  new-year:
+    type: "NEW_YEAR"
+    date: "01-01"
+    display-name: "&b元旦"
+    category: "SERVER_CUSTOM"
+    priority: 10
+    enabled: true
+    description: "新年快乐！愿新的冒险从今天开始。"
+
+  valentines:
+    type: "VALENTINES_DAY"
+    date: "02-14"
+    display-name: "&d情人节"
+    category: "SERVER_CUSTOM"
+    priority: 8
+    enabled: true
+    description: "情人节快乐！把祝福与爱分享给身边的人。"
+
+  easter:
+    type: "EASTER"
+    date: "04-20"
+    display-name: "&e复活节"
+    category: "SERVER_CUSTOM"
+    priority: 8
+    enabled: true
+    description: "复活节快乐！愿春日彩蛋带来惊喜。"
+
+  halloween:
+    type: "HALLOWEEN"
+    date: "10-31"
+    display-name: "&6万圣节"
+    category: "SERVER_CUSTOM"
+    priority: 8
+    enabled: true
+    description: "万圣节到了！小心黑暗中的惊吓。"
+
+  christmas:
+    type: "CHRISTMAS"
+    date: "12-25"
+    display-name: "&2圣诞节"
+    category: "SERVER_CUSTOM"
+    priority: 9
+    enabled: true
+    description: "圣诞快乐！世界被温暖的节日气息包围。"
